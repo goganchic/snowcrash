@@ -19,7 +19,9 @@
  *  defined type due to C++98 string concatenation limitations.
  *  FIXME: To be improved with migration to C++11.
  */
-#define HTTP_REQUEST_METHOD "(GET|POST|PUT|DELETE|OPTIONS|PATCH|PROPPATCH|LOCK|UNLOCK|COPY|MOVE|MKCOL|HEAD|LINK|UNLINK|CONNECT)"
+#define HTTP_REQUEST_METHOD                                                                                            \
+    "(GET|POST|PUT|DELETE|OPTIONS|PATCH|PROPPATCH|LOCK|UNLOCK|COPY|MOVE|MKCOL|"                                        \
+    "HEAD|LINK|UNLINK|CONNECT)"
 
 /**
  *  \brief URI Template.
@@ -28,7 +30,8 @@
  */
 #define URI_TEMPLATE "(/.*)"
 
-namespace snowcrash {
+namespace snowcrash
+{
 
     /**
      *  Selected HTTP Header names.
@@ -63,7 +66,9 @@ namespace snowcrash {
 
         bool allowBody; /// < Response body is allowed.
 
-        HTTPResponseTraits() : allowBody(true) {}
+        HTTPResponseTraits() : allowBody(true)
+        {
+        }
     };
 
     /**
@@ -72,10 +77,11 @@ namespace snowcrash {
      *  HTTP request method related response prescription
      *  Ref: http://www.w3.org/Protocols/rfc2616/rfc2616-sec9.html
      */
-    struct HTTPMethodTraits : HTTPResponseTraits
-    {
+    struct HTTPMethodTraits : HTTPResponseTraits {
         HTTPMethod method;
-        HTTPMethodTraits() : method("") {}
+        HTTPMethodTraits() : method("")
+        {
+        }
     };
 
     /**
@@ -84,10 +90,11 @@ namespace snowcrash {
      *  Status-related response prescription.
      *  Ref: http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
      */
-    struct StatusCodeTraits : HTTPResponseTraits
-    {
+    struct StatusCodeTraits : HTTPResponseTraits {
         HTTPStatusCode code;
-        StatusCodeTraits() : code(0) {}
+        StatusCodeTraits() : code(0)
+        {
+        }
     };
 
     /**

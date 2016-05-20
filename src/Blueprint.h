@@ -23,7 +23,8 @@
  *  Data types in this documents define the API Blueprint AST.
  */
 
-namespace snowcrash {
+namespace snowcrash
+{
 
     /** Name of a an API Blueprint entity. */
     typedef std::string Name;
@@ -77,7 +78,7 @@ namespace snowcrash {
      *  FIXME: Use C++11 template aliases when migrating to C++11.
      */
 
-    template<typename T>
+    template <typename T>
     struct Collection {
         typedef std::vector<T> type;
         typedef typename std::vector<T>::iterator iterator;
@@ -95,17 +96,13 @@ namespace snowcrash {
 
     /** Role of an element */
     enum AssetRole {
-        UndefinedAssetRole = 0,   // Unknown
-        BodyExampleAssetRole,     // Body example for asset
-        BodySchemaAssetRole       // Body schema for asset
+        UndefinedAssetRole = 0, // Unknown
+        BodyExampleAssetRole, // Body example for asset
+        BodySchemaAssetRole // Body schema for asset
     };
 
     /** Parameter Use flag */
-    enum ParameterUse {
-        UndefinedParameterUse,
-        OptionalParameterUse,
-        RequiredParameterUse
-    };
+    enum ParameterUse { UndefinedParameterUse, OptionalParameterUse, RequiredParameterUse };
 
     /** Parameter */
     struct Parameter {
@@ -147,14 +144,14 @@ namespace snowcrash {
 
         /** Reference Resolution State */
         enum State {
-            StateUnresolved,    // Reference unresolved (undefined)
-            StatePending,       // Reference resolution pending
-            StateResolved       // Reference resolved successfully
+            StateUnresolved, // Reference unresolved (undefined)
+            StatePending, // Reference resolution pending
+            StateResolved // Reference resolved successfully
         };
 
         /** Reference Type */
         enum ReferenceType {
-            ModelReference  // Resource Model as a reference
+            ModelReference // Resource Model as a reference
         };
 
         /** Identifier */
@@ -166,8 +163,9 @@ namespace snowcrash {
         struct ReferenceMetadata {
 
             /** Constructor */
-            ReferenceMetadata(State state_ = StateUnresolved)
-            : state(state_) {}
+            ReferenceMetadata(State state_ = StateUnresolved) : state(state_)
+            {
+            }
 
             /** Markdown AST reference source node (for source map) */
             mdp::MarkdownNodeIterator node;
@@ -377,11 +375,11 @@ namespace snowcrash {
         /** Class of an element */
         enum Class {
             UndefinedElement = 0, // Unknown
-            CategoryElement,      // Group of other elements
-            CopyElement,          // Human readable text
-            AssetElement,         // Asset of API description
-            ResourceElement,      // Resource
-            DataStructureElement  // Data Structure
+            CategoryElement, // Group of other elements
+            CopyElement, // Human readable text
+            AssetElement, // Asset of API description
+            ResourceElement, // Resource
+            DataStructureElement // Data Structure
         };
 
         /** Attributes of an element */
@@ -425,8 +423,8 @@ namespace snowcrash {
 
         /** Type of Category element (parser internal flag) */
         enum Category {
-            UndefinedCategory = 0,     // Unknown
-            ResourceGroupCategory,     // Resource Group
+            UndefinedCategory = 0, // Unknown
+            ResourceGroupCategory, // Resource Group
             DataStructureGroupCategory // Data Structure Group
         };
 
@@ -470,7 +468,8 @@ namespace snowcrash {
     /**
      *  \brief API Blueprint AST
      *
-     *  This is top-level (or root if you prefer) of API Blueprint abstract syntax tree.
+     *  This is top-level (or root if you prefer) of API Blueprint abstract syntax
+     * tree.
      *  Start reading a parsed API here.
      */
     struct Blueprint : public Element {

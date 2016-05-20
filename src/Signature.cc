@@ -76,11 +76,9 @@ SectionType snowcrash::RecognizeCodeBlockFirstLine(const mdp::ByteBuffer& subjec
 
     if (RegexMatch(subject, HeadersRegex)) {
         return HeadersSectionType;
-    }
-    else if (RegexMatch(subject, BodyRegex)) {
+    } else if (RegexMatch(subject, BodyRegex)) {
         return BodySectionType;
-    }
-    else if (RegexMatch(subject, SchemaRegex)) {
+    } else if (RegexMatch(subject, SchemaRegex)) {
         return SchemaSectionType;
     }
 

@@ -27,7 +27,8 @@
  * Data types in this document define the MSON AST
  */
 
-namespace mson {
+namespace mson
+{
 
     /** Markdown */
     typedef mdp::ByteBuffer Markdown;
@@ -42,13 +43,13 @@ namespace mson {
      * that particular named type or member is sub-typed from
      */
     enum BaseType {
-        UndefinedBaseType = 0,     // Undefined
-        PrimitiveBaseType,         // Primitive Types
+        UndefinedBaseType = 0, // Undefined
+        PrimitiveBaseType, // Primitive Types
         ImplicitPrimitiveBaseType, // Primitive Types (implicit)
-        ObjectBaseType,            // Object Structure Type
-        ImplicitObjectBaseType,    // Object Structure Type (implicit)
-        ValueBaseType,             // Array & Enum Structure Type
-        ImplicitValueBaseType      // Array & Enum Structure Type (implicit)
+        ObjectBaseType, // Object Structure Type
+        ImplicitObjectBaseType, // Object Structure Type (implicit)
+        ValueBaseType, // Array & Enum Structure Type
+        ImplicitValueBaseType // Array & Enum Structure Type (implicit)
     };
 
     /** Named Types base type table */
@@ -64,8 +65,9 @@ namespace mson {
     struct Value {
 
         /** Constructor */
-        Value()
-        : variable(false) {}
+        Value() : variable(false)
+        {
+        }
 
         /** Literal value */
         Literal literal;
@@ -84,8 +86,9 @@ namespace mson {
     struct Symbol {
 
         /** Constructor */
-        Symbol()
-        : variable(false) {}
+        Symbol() : variable(false)
+        {
+        }
 
         /** Name of the symbol */
         Literal literal;
@@ -100,20 +103,21 @@ namespace mson {
     /** Value of type name if based type */
     enum BaseTypeName {
         UndefinedTypeName = 0, // Not a base type name
-        BooleanTypeName,       // `boolean` type name
-        StringTypeName,        // `string` type name
-        NumberTypeName,        // `number` type name
-        ArrayTypeName,         // `array` type name
-        EnumTypeName,          // `enum` type name
-        ObjectTypeName         // `object` type name
+        BooleanTypeName, // `boolean` type name
+        StringTypeName, // `string` type name
+        NumberTypeName, // `number` type name
+        ArrayTypeName, // `array` type name
+        EnumTypeName, // `enum` type name
+        ObjectTypeName // `object` type name
     };
 
     /** Base or named type's name */
     struct TypeName {
 
         /** Constructor */
-        TypeName(const BaseTypeName& base_ = UndefinedTypeName)
-        : base(base_) {}
+        TypeName(const BaseTypeName& base_ = UndefinedTypeName) : base(base_)
+        {
+        }
 
         /** EITHER Base type's value */
         BaseTypeName base;
@@ -130,12 +134,12 @@ namespace mson {
 
     /** Attribute of a type */
     enum TypeAttribute {
-        RequiredTypeAttribute = (1 << 0),  // The type is required
-        OptionalTypeAttribute = (1 << 1),  // The type is optional
-        FixedTypeAttribute    = (1 << 2),  // The type is fixed
-        SampleTypeAttribute   = (1 << 3),  // The type is a sample
-        DefaultTypeAttribute  = (1 << 4),  // The type is default
-        NullableTypeAttribute = (1 << 5)   // The type is nullable
+        RequiredTypeAttribute = (1 << 0), // The type is required
+        OptionalTypeAttribute = (1 << 1), // The type is optional
+        FixedTypeAttribute = (1 << 2), // The type is fixed
+        SampleTypeAttribute = (1 << 3), // The type is a sample
+        DefaultTypeAttribute = (1 << 4), // The type is default
+        NullableTypeAttribute = (1 << 5) // The type is nullable
     };
 
     /** List of type attributes */
@@ -158,8 +162,9 @@ namespace mson {
     struct TypeDefinition {
 
         /** Constructor */
-        TypeDefinition()
-        : baseType(UndefinedBaseType), attributes(0) {}
+        TypeDefinition() : baseType(UndefinedBaseType), attributes(0)
+        {
+        }
 
         /**
          * Base Type (for the type definition)
@@ -203,11 +208,11 @@ namespace mson {
 
         /** Class of a type section */
         enum Class {
-            UndefinedClass = 0,    // Unknown
+            UndefinedClass = 0, // Unknown
             BlockDescriptionClass, // Markdown block description
-            MemberTypeClass,       // Contains member types
-            SampleClass,           // Sample value(s) for member types
-            DefaultClass           // Default value(s) for member types
+            MemberTypeClass, // Contains member types
+            SampleClass, // Sample value(s) for member types
+            DefaultClass // Default value(s) for member types
         };
 
         /** Content of the type section */
@@ -241,7 +246,9 @@ namespace mson {
 
         /** Constructor */
         TypeSection(const TypeSection::Class& klass_ = TypeSection::UndefinedClass)
-        : baseType(UndefinedBaseType), klass(klass_) {}
+            : baseType(UndefinedBaseType), klass(klass_)
+        {
+        }
 
         /** Base Type (for the parent of the type section) */
         BaseType baseType;
@@ -326,11 +333,11 @@ namespace mson {
         /** Class of an element */
         enum Class {
             UndefinedClass = 0, // Unknown
-            PropertyClass,      // Property member
-            ValueClass,         // Value member
-            MixinClass,         // Mixin
-            OneOfClass,         // One of
-            GroupClass          // Group of elements
+            PropertyClass, // Property member
+            ValueClass, // Value member
+            MixinClass, // Mixin
+            OneOfClass, // One of
+            GroupClass // Group of elements
         };
 
         /** Content of the element */

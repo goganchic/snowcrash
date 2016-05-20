@@ -13,26 +13,28 @@
 
 using namespace scpl;
 
-namespace snowcrash {
+namespace snowcrash
+{
 
     /**
      * MSON Named Type Section Processor
      */
-    template<>
+    template <>
     struct SectionProcessor<mson::NamedType> : public SignatureSectionProcessorBase<mson::NamedType> {
 
-        static SignatureTraits signatureTraits() {
+        static SignatureTraits signatureTraits()
+        {
 
-            SignatureTraits signatureTraits(SignatureTraits::IdentifierTrait |
-                                            SignatureTraits::AttributesTrait);
+            SignatureTraits signatureTraits(SignatureTraits::IdentifierTrait | SignatureTraits::AttributesTrait);
 
             return signatureTraits;
         }
 
         static MarkdownNodeIterator finalizeSignature(const MarkdownNodeIterator& node,
-                                                      SectionParserData& pd,
-                                                      const Signature& signature,
-                                                      const ParseResultRef<mson::NamedType>& out) {
+            SectionParserData& pd,
+            const Signature& signature,
+            const ParseResultRef<mson::NamedType>& out)
+        {
 
             mson::parseTypeName(signature.identifier, out.node.name, false);
             mson::parseTypeDefinition(node, pd, signature.attributes, out.report, out.node.typeDefinition);
@@ -48,7 +50,8 @@ namespace snowcrash {
                 }
             }
 
-            // Named types should have type specification when sub-typed from primitive types
+            // Named types should have type specification when sub-typed from primitive
+            // types
             if (out.node.typeDefinition.baseType == mson::UndefinedBaseType) {
                 out.node.typeDefinition.baseType = mson::ImplicitObjectBaseType;
             }
@@ -60,37 +63,39 @@ namespace snowcrash {
         }
 
         static MarkdownNodeIterator processDescription(const MarkdownNodeIterator& node,
-                                                       const MarkdownNodes& siblings,
-                                                       SectionParserData& pd,
-                                                       const ParseResultRef<mson::NamedType>& out) {
+            const MarkdownNodes& siblings,
+            SectionParserData& pd,
+            const ParseResultRef<mson::NamedType>& out)
+        {
 
-            return SectionProcessor<mson::ValueMember>::blockDescription(node, pd, out.node.sections, out.sourceMap.sections);
+            return SectionProcessor<mson::ValueMember>::blockDescription(
+                node, pd, out.node.sections, out.sourceMap.sections);
         }
 
         static MarkdownNodeIterator processNestedSection(const MarkdownNodeIterator& node,
-                                                         const MarkdownNodes& siblings,
-                                                         SectionParserData& pd,
-                                                         const ParseResultRef<mson::NamedType>& out) {
+            const MarkdownNodes& siblings,
+            SectionParserData& pd,
+            const ParseResultRef<mson::NamedType>& out)
+        {
 
             ParseResultRef<mson::TypeSections> typeSections(out.report, out.node.sections, out.sourceMap.sections);
 
-            return SectionProcessor<mson::ValueMember>
-                    ::processNestedMembers<MSONTypeSectionHeaderParser>(node, siblings, pd, typeSections,
-                                                                        out.node.typeDefinition.baseType);
+            return SectionProcessor<mson::ValueMember>::processNestedMembers<MSONTypeSectionHeaderParser>(
+                node, siblings, pd, typeSections, out.node.typeDefinition.baseType);
         }
 
-        static bool isDescriptionNode(const MarkdownNodeIterator& node,
-                                      SectionType sectionType) {
+        static bool isDescriptionNode(const MarkdownNodeIterator& node, SectionType sectionType)
+        {
 
             return SectionProcessor<mson::ValueMember>::isDescriptionNode(node, sectionType);
         }
 
-        static SectionType sectionType(const MarkdownNodeIterator& node) {
+        static SectionType sectionType(const MarkdownNodeIterator& node)
+        {
 
             SectionType sectionType = SectionKeywordSignature(node);
 
-            if (node->type == mdp::HeaderMarkdownNodeType &&
-                sectionType == UndefinedSectionType) {
+            if (node->type == mdp::HeaderMarkdownNodeType && sectionType == UndefinedSectionType) {
 
                 return MSONNamedTypeSectionType;
             }
@@ -98,14 +103,15 @@ namespace snowcrash {
             return UndefinedSectionType;
         }
 
-        static SectionType nestedSectionType(const MarkdownNodeIterator& node) {
+        static SectionType nestedSectionType(const MarkdownNodeIterator& node)
+        {
 
             return SectionProcessor<mson::ValueMember>::nestedSectionType(node);
         }
 
-        static void finalize(const MarkdownNodeIterator& node,
-                             SectionParserData& pd,
-                             const ParseResultRef<mson::NamedType>& out) {
+        static void finalize(
+            const MarkdownNodeIterator& node, SectionParserData& pd, const ParseResultRef<mson::NamedType>& out)
+        {
 
             // Clear named type context
             pd.namedTypeContext.clear();

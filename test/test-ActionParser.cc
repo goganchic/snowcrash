@@ -13,11 +13,11 @@
 using namespace snowcrash;
 using namespace snowcrashtest;
 
-const mdp::ByteBuffer ActionFixture = \
-"# My Method [GET]\n\n"\
-"Method Description\n\n"\
-"+ Response 200 (text/plain)\n\n"\
-"        OK.";
+const mdp::ByteBuffer ActionFixture
+    = "# My Method [GET]\n\n"
+      "Method Description\n\n"
+      "+ Response 200 (text/plain)\n\n"
+      "        OK.";
 
 TEST_CASE("Method block classifier", "[action]")
 {
@@ -69,17 +69,18 @@ TEST_CASE("Parsing action", "[action]")
     SourceMapHelper::check(action.sourceMap.examples.collection[0].responses.collection[0].body.sourceMap, 72, 7);
     SourceMapHelper::check(action.sourceMap.examples.collection[0].responses.collection[0].name.sourceMap, 41, 27);
     REQUIRE(action.sourceMap.examples.collection[0].responses.collection[0].headers.collection.size() == 1);
-    SourceMapHelper::check(action.sourceMap.examples.collection[0].responses.collection[0].headers.collection[0].sourceMap, 41, 27);
+    SourceMapHelper::check(
+        action.sourceMap.examples.collection[0].responses.collection[0].headers.collection[0].sourceMap, 41, 27);
 }
 
 TEST_CASE("Parse Action description with list", "[action]")
 {
-    mdp::ByteBuffer source = \
-    "# GET\n"\
-    "Small Description\n"\
-    "+ A\n"\
-    "+ B\n"\
-    "+ Response 204\n";
+    mdp::ByteBuffer source
+        = "# GET\n"
+          "Small Description\n"
+          "+ A\n"
+          "+ B\n"
+          "+ Response 204\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -104,24 +105,24 @@ TEST_CASE("Parse Action description with list", "[action]")
 
 TEST_CASE("Parse method with multiple requests and responses", "[action]")
 {
-    mdp::ByteBuffer source = \
-    "# PUT\n"\
-    "+ Request A\n"\
-    "  B\n"\
-    "  + Body\n\n"\
-    "            C\n\n"\
-    "+ Request D\n"\
-    "  E\n"\
-    "  + Body\n\n"\
-    "            F\n\n"\
-    "+ Response 200\n"\
-    "  G\n"\
-    "  + Body\n\n"\
-    "            H\n\n"\
-    "+ Response 200\n"\
-    "  I\n"\
-    "  + Body\n\n"\
-    "            J\n\n";
+    mdp::ByteBuffer source
+        = "# PUT\n"
+          "+ Request A\n"
+          "  B\n"
+          "  + Body\n\n"
+          "            C\n\n"
+          "+ Request D\n"
+          "  E\n"
+          "  + Body\n\n"
+          "            F\n\n"
+          "+ Response 200\n"
+          "  G\n"
+          "  + Body\n\n"
+          "            H\n\n"
+          "+ Response 200\n"
+          "  I\n"
+          "  + Body\n\n"
+          "            J\n\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -177,12 +178,12 @@ TEST_CASE("Parse method with multiple requests and responses", "[action]")
 
 TEST_CASE("Parse method with multiple incomplete requests", "[action][blocks]")
 {
-    mdp::ByteBuffer source = \
-    "# GET /1\n"\
-    "+ Request A\n"\
-    "+ Request B\n"\
-    "  C\n"\
-    "+ Response 200\n";
+    mdp::ByteBuffer source
+        = "# GET /1\n"
+          "+ Request A\n"
+          "+ Request B\n"
+          "  C\n"
+          "+ Response 200\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -223,13 +224,13 @@ TEST_CASE("Parse method with multiple incomplete requests", "[action][blocks]")
 
 TEST_CASE("Parse method with foreign item", "[action]")
 {
-    mdp::ByteBuffer source = \
-    "# MKCOL\n"\
-    "+ Request\n"\
-    "  + Body\n\n"\
-    "            Foo\n\n"\
-    "+ Bar\n"\
-    "+ Response 200\n";
+    mdp::ByteBuffer source
+        = "# MKCOL\n"
+          "+ Request\n"
+          "  + Body\n\n"
+          "            Foo\n\n"
+          "+ Bar\n"
+          "+ Response 200\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -262,11 +263,11 @@ TEST_CASE("Parse method with foreign item", "[action]")
 
 TEST_CASE("Parse method with a HR", "[action]")
 {
-    mdp::ByteBuffer source = \
-    "# PATCH /1\n\n"\
-    "A\n"\
-    "---\n"\
-    "B\n";
+    mdp::ByteBuffer source
+        = "# PATCH /1\n\n"
+          "A\n"
+          "---\n"
+          "B\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -307,13 +308,13 @@ TEST_CASE("Parse method without name", "[action]")
 
 TEST_CASE("Parse action with parameters", "[action]")
 {
-    mdp::ByteBuffer source = \
-    "# GET /resrouce/{id}\n"\
-    "+ Parameters\n"\
-    "    + id (required, number, `42`) ... Resource Id\n"\
-    "\n"\
-    "+ Response 204\n"\
-    "\n";
+    mdp::ByteBuffer source
+        = "# GET /resrouce/{id}\n"
+          "+ Parameters\n"
+          "    + id (required, number, `42`) ... Resource Id\n"
+          "\n"
+          "+ Response 204\n"
+          "\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -341,10 +342,10 @@ TEST_CASE("Parse action with parameters", "[action]")
 
 TEST_CASE("Give a warning when 2xx CONNECT has a body", "[action]")
 {
-    mdp::ByteBuffer source = \
-    "# CONNECT /1\n"\
-    "+ Response 201\n\n"\
-    "        {}\n\n";
+    mdp::ByteBuffer source
+        = "# CONNECT /1\n"
+          "+ Response 201\n\n"
+          "        {}\n\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -367,10 +368,10 @@ TEST_CASE("Give a warning when 2xx CONNECT has a body", "[action]")
 
 TEST_CASE("Give a warning when response to HEAD has a body", "[action]")
 {
-    mdp::ByteBuffer source = \
-    "# HEAD /1\n"\
-    "+ Response 200\n\n"\
-    "        {}\n\n";
+    mdp::ByteBuffer source
+        = "# HEAD /1\n"
+          "+ Response 200\n\n"
+          "        {}\n\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -394,9 +395,9 @@ TEST_CASE("Give a warning when response to HEAD has a body", "[action]")
 
 TEST_CASE("Missing 'LINK' HTTP request method", "[action]")
 {
-    mdp::ByteBuffer source = \
-    "# LINK /1\n"\
-    "+ Response 204\n\n";
+    mdp::ByteBuffer source
+        = "# LINK /1\n"
+          "+ Response 204\n\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -418,15 +419,15 @@ TEST_CASE("Missing 'LINK' HTTP request method", "[action]")
 
 TEST_CASE("Warn when request is not followed by a response", "[action]")
 {
-    mdp::ByteBuffer source = \
-    "# GET /1\n"\
-    "+ response 200 \n"\
-    "\n"\
-    "        200\n"\
-    "\n"\
-    "+ request A\n"\
-    "\n"\
-    "        A\n";
+    mdp::ByteBuffer source
+        = "# GET /1\n"
+          "+ response 200 \n"
+          "\n"
+          "        200\n"
+          "\n"
+          "+ request A\n"
+          "\n"
+          "        A\n";
 
     ParseResult<Action> action;
     SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption);
@@ -452,7 +453,7 @@ TEST_CASE("Warn when request is not followed by a response", "[action]")
 }
 
 // TODO: This test is failing because of a bug in action attributes. Need to fix the bug.
-//TEST_CASE("Parse action attributes", "[action]")
+// TEST_CASE("Parse action attributes", "[action]")
 //{
 //    mdp::ByteBuffer source = \
 //    "# GET /1\n\n"\
@@ -467,7 +468,8 @@ TEST_CASE("Warn when request is not followed by a response", "[action]")
 //    NamedTypes namedTypes;
 //
 //    NamedTypeHelper::build("Coupon", mson::ObjectBaseType, namedTypes);
-//    SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption, Models(), NULL, namedTypes);
+//    SectionParserHelper<Action, ActionParser>::parse(source, ActionSectionType, action, ExportSourcemapOption,
+//    Models(), NULL, namedTypes);
 //
 //    REQUIRE(action.report.error.code == Error::OK);
 //    REQUIRE(action.report.warnings.empty());
@@ -478,18 +480,19 @@ TEST_CASE("Warn when request is not followed by a response", "[action]")
 //    REQUIRE(action.node.examples[0].requests[0].attributes.source.empty());
 //    REQUIRE(action.node.examples[0].responses.size() == 1);
 //    REQUIRE(action.node.examples[1].requests.size() == 1);
-//    REQUIRE(action.node.examples[1].requests[0].attributes.source.typeDefinition.typeSpecification.name.base == mson::StringTypeName);
+//    REQUIRE(action.node.examples[1].requests[0].attributes.source.typeDefinition.typeSpecification.name.base ==
+//    mson::StringTypeName);
 //    REQUIRE(action.node.examples[1].responses.size() == 1);
 //}
 
 TEST_CASE("Named Endpoint", "[named_endpoint]")
 {
-    const mdp::ByteBuffer source = \
-    "# Group Test Group\n\n"\
-    "## My Named Endpoint [GET /test/endpoint]\n\n"\
-    "Endpoint Description\n\n"\
-    "+ Response 200 (text/plain)\n\n"\
-    "        OK.";
+    const mdp::ByteBuffer source
+        = "# Group Test Group\n\n"
+          "## My Named Endpoint [GET /test/endpoint]\n\n"
+          "Endpoint Description\n\n"
+          "+ Response 200 (text/plain)\n\n"
+          "        OK.";
 
     ParseResult<Blueprint> blueprint;
     snowcrash::parse(source, 0, blueprint);
@@ -513,13 +516,13 @@ TEST_CASE("Named Endpoint", "[named_endpoint]")
 
 TEST_CASE("Named Endpoints Edge Cases", "[named_endpoint]")
 {
-    const mdp::ByteBuffer source = \
-    "# Endpoint 1  [GET /e1]\n\n"\
-    "+ Response 204\n\n"\
-    "# Endpoint 2  [GET /e1]\n\n"\
-    "+ Response 204\n\n"\
-    "# Endpoint 3  [POST /e1]\n\n"\
-    "+ Response 204\n";
+    const mdp::ByteBuffer source
+        = "# Endpoint 1  [GET /e1]\n\n"
+          "+ Response 204\n\n"
+          "# Endpoint 2  [GET /e1]\n\n"
+          "+ Response 204\n\n"
+          "# Endpoint 3  [POST /e1]\n\n"
+          "+ Response 204\n";
 
     ParseResult<Blueprint> blueprint;
     snowcrash::parse(source, 0, blueprint);

@@ -13,28 +13,30 @@
 
 using namespace scpl;
 
-namespace snowcrash {
+namespace snowcrash
+{
 
     /**
      * MSON Property Member Section Processor
      */
-    template<>
+    template <>
     struct SectionProcessor<mson::PropertyMember> : public SignatureSectionProcessorBase<mson::PropertyMember> {
 
-        static SignatureTraits signatureTraits() {
+        static SignatureTraits signatureTraits()
+        {
 
-            SignatureTraits signatureTraits(SignatureTraits::IdentifierTrait |
-                                            SignatureTraits::ValuesTrait |
-                                            SignatureTraits::AttributesTrait |
-                                            SignatureTraits::ContentTrait);
+            SignatureTraits signatureTraits(SignatureTraits::IdentifierTrait | SignatureTraits::ValuesTrait
+                | SignatureTraits::AttributesTrait
+                | SignatureTraits::ContentTrait);
 
             return signatureTraits;
         }
 
         static MarkdownNodeIterator finalizeSignature(const MarkdownNodeIterator& node,
-                                                      SectionParserData& pd,
-                                                      const Signature& signature,
-                                                      const ParseResultRef<mson::PropertyMember>& out) {
+            SectionParserData& pd,
+            const Signature& signature,
+            const ParseResultRef<mson::PropertyMember>& out)
+        {
 
             mson::parsePropertyName(node, pd, signature.identifier, out.report, out.node.name);
 
@@ -42,45 +44,50 @@ namespace snowcrash {
                 out.sourceMap.name.sourceMap = node->sourceMap;
             }
 
-            return SectionProcessor<mson::ValueMember>::useSignatureData(node, pd, signature, out.report, out.node, out.sourceMap);
+            return SectionProcessor<mson::ValueMember>::useSignatureData(
+                node, pd, signature, out.report, out.node, out.sourceMap);
         }
 
         static MarkdownNodeIterator processDescription(const MarkdownNodeIterator& node,
-                                                       const MarkdownNodes& siblings,
-                                                       SectionParserData& pd,
-                                                       const ParseResultRef<mson::PropertyMember>& out) {
+            const MarkdownNodes& siblings,
+            SectionParserData& pd,
+            const ParseResultRef<mson::PropertyMember>& out)
+        {
 
-            return SectionProcessor<mson::ValueMember>::blockDescription(node, pd, out.node.sections, out.sourceMap.sections);
+            return SectionProcessor<mson::ValueMember>::blockDescription(
+                node, pd, out.node.sections, out.sourceMap.sections);
         }
 
         static MarkdownNodeIterator processNestedSection(const MarkdownNodeIterator& node,
-                                                         const MarkdownNodes& siblings,
-                                                         SectionParserData& pd,
-                                                         const ParseResultRef<mson::PropertyMember>& out) {
+            const MarkdownNodes& siblings,
+            SectionParserData& pd,
+            const ParseResultRef<mson::PropertyMember>& out)
+        {
 
             ParseResultRef<mson::TypeSections> typeSections(out.report, out.node.sections, out.sourceMap.sections);
 
-            return SectionProcessor<mson::ValueMember>
-                    ::processNestedMembers<MSONTypeSectionListParser>(node, siblings, pd, typeSections,
-                                                                      out.node.valueDefinition.typeDefinition.baseType);
+            return SectionProcessor<mson::ValueMember>::processNestedMembers<MSONTypeSectionListParser>(
+                node, siblings, pd, typeSections, out.node.valueDefinition.typeDefinition.baseType);
         }
 
-        static bool isDescriptionNode(const MarkdownNodeIterator& node,
-                                      SectionType sectionType) {
+        static bool isDescriptionNode(const MarkdownNodeIterator& node, SectionType sectionType)
+        {
 
             return SectionProcessor<mson::ValueMember>::isDescriptionNode(node, sectionType);
         }
 
-        static SectionType nestedSectionType(const MarkdownNodeIterator& node) {
+        static SectionType nestedSectionType(const MarkdownNodeIterator& node)
+        {
 
             return SectionProcessor<mson::ValueMember>::nestedSectionType(node);
         }
 
-        static void finalize(const MarkdownNodeIterator& node,
-                             SectionParserData& pd,
-                             const ParseResultRef<mson::PropertyMember>& out) {
+        static void finalize(
+            const MarkdownNodeIterator& node, SectionParserData& pd, const ParseResultRef<mson::PropertyMember>& out)
+        {
 
-            SectionProcessor<mson::ValueMember>::finalizeImplicitBaseType(out.node.valueDefinition.typeDefinition.baseType);
+            SectionProcessor<mson::ValueMember>::finalizeImplicitBaseType(
+                out.node.valueDefinition.typeDefinition.baseType);
         }
     };
 

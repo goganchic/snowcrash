@@ -263,10 +263,10 @@ TEST_CASE("Parse nullable type attribute", "[mson][utility]")
 {
     std::string source = "nullable";
     TypeAttributes typeAttributes = 0;
-    
+
     bool isAttributeParsed;
     isAttributeParsed = parseTypeAttribute(source, typeAttributes);
-    
+
     REQUIRE((typeAttributes & RequiredTypeAttribute) == 0);
     REQUIRE((typeAttributes & OptionalTypeAttribute) == 0);
     REQUIRE((typeAttributes & FixedTypeAttribute) == 0);

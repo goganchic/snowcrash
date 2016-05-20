@@ -14,14 +14,14 @@
 
 #define ADAPTER_MISMATCH_ERR std::logic_error("mismatched adapter and node type")
 
-namespace snowcrash {
+namespace snowcrash
+{
 
     /**
      *  Blueprint section parser
      */
-    template<typename T, typename Adapter>
+    template <typename T, typename Adapter>
     struct SectionParser {
-
 
         /**
          *  \brief  Parse a section of blueprint
@@ -32,9 +32,10 @@ namespace snowcrash {
          *  \return Iterator to the first unparsed block
          */
         static MarkdownNodeIterator parse(const MarkdownNodeIterator& node,
-                                          const MarkdownNodes& siblings,
-                                          SectionParserData& pd,
-                                          const ParseResultRef<T>& out) {
+            const MarkdownNodes& siblings,
+            SectionParserData& pd,
+            const ParseResultRef<T>& out)
+        {
 
             SectionLayout layout = DefaultSectionLayout;
             MarkdownNodeIterator cur = Adapter::startingNode(node);
@@ -66,8 +67,7 @@ namespace snowcrash {
                 return Adapter::nextStartingNode(node, siblings, cur);
 
             // Description nodes
-            while(cur != collection.end() &&
-                  SectionProcessor<T>::isDescriptionNode(cur, pd.sectionContext())) {
+            while (cur != collection.end() && SectionProcessor<T>::isDescriptionNode(cur, pd.sectionContext())) {
 
                 lastCur = cur;
                 cur = SectionProcessor<T>::processDescription(cur, collection, pd, out);
@@ -77,8 +77,7 @@ namespace snowcrash {
             }
 
             // Content nodes
-            while(cur != collection.end() &&
-                  SectionProcessor<T>::isContentNode(cur, pd.sectionContext())) {
+            while (cur != collection.end() && SectionProcessor<T>::isContentNode(cur, pd.sectionContext())) {
 
                 lastCur = cur;
                 cur = SectionProcessor<T>::processContent(cur, collection, pd, out);
@@ -95,12 +94,12 @@ namespace snowcrash {
             return Adapter::nextStartingNode(node, siblings, cur);
         }
 
-
         /** Parse nested sections */
         static MarkdownNodeIterator parseNestedSections(const MarkdownNodeIterator& node,
-                                                        const MarkdownNodes& collection,
-                                                        SectionParserData& pd,
-                                                        const ParseResultRef<T>& out) {
+            const MarkdownNodes& collection,
+            SectionParserData& pd,
+            const ParseResultRef<T>& out)
+        {
 
             MarkdownNodeIterator cur = node;
             MarkdownNodeIterator lastCur = cur;
@@ -110,7 +109,7 @@ namespace snowcrash {
             SectionProcessor<T>::preprocessNestedSections(node, collection, pd, out);
 
             // Nested sections
-            while(cur != collection.end()) {
+            while (cur != collection.end()) {
 
                 lastCur = cur;
                 SectionType nestedType = SectionProcessor<T>::nestedSectionType(cur);
@@ -119,17 +118,15 @@ namespace snowcrash {
 
                 if (nestedType != UndefinedSectionType) {
                     cur = SectionProcessor<T>::processNestedSection(cur, collection, pd, out);
-                }
-                else if (Adapter::nextSkipsUnexpected ||
-                         SectionProcessor<T>::isUnexpectedNode(cur, pd.sectionContext())) {
+                } else if (Adapter::nextSkipsUnexpected
+                    || SectionProcessor<T>::isUnexpectedNode(cur, pd.sectionContext())) {
 
                     cur = SectionProcessor<T>::processUnexpectedNode(cur, collection, pd, lastSectionType, out);
                 }
 
-                if (cur != collection.end() &&
-                    (pd.sectionContext() != UndefinedSectionType ||
-                     (cur->type != mdp::ParagraphMarkdownNodeType &&
-                      cur->type != mdp::CodeMarkdownNodeType))) {
+                if (cur != collection.end() && (pd.sectionContext() != UndefinedSectionType
+                                                   || (cur->type != mdp::ParagraphMarkdownNodeType
+                                                          && cur->type != mdp::CodeMarkdownNodeType))) {
 
                     lastSectionType = pd.sectionContext();
                 }
@@ -148,7 +145,8 @@ namespace snowcrash {
     struct HeaderSectionAdapter {
 
         /** \return Node to start parsing with */
-        static const MarkdownNodeIterator startingNode(const MarkdownNodeIterator& seed) {
+        static const MarkdownNodeIterator startingNode(const MarkdownNodeIterator& seed)
+        {
             if (seed->type != mdp::HeaderMarkdownNodeType)
                 throw ADAPTER_MISMATCH_ERR;
 
@@ -156,23 +154,26 @@ namespace snowcrash {
         }
 
         /** \return Collection of siblings to starting Node */
-        static const MarkdownNodes& startingNodeSiblings(const MarkdownNodeIterator& seed,
-                                                         const MarkdownNodes& siblings) {
+        static const MarkdownNodes& startingNodeSiblings(
+            const MarkdownNodeIterator& seed, const MarkdownNodes& siblings)
+        {
             return siblings;
         }
 
         /** \return Starting node for next parsing */
-        static const MarkdownNodeIterator nextStartingNode(const MarkdownNodeIterator& seed,
-                                                           const MarkdownNodes& siblings,
-                                                           const MarkdownNodeIterator& cur) {
+        static const MarkdownNodeIterator nextStartingNode(
+            const MarkdownNodeIterator& seed, const MarkdownNodes& siblings, const MarkdownNodeIterator& cur)
+        {
             return cur;
         }
 
         /**
          *  \brief Adapter Markdown node skipping behavior trait.
          *
-         *  Adapter trait signalizing that the adapter can possibly skip some Markdown nodes on a nextStartingNode() call.
-         *  If set to true, a call to nextStartingNode() can skip some nodes causing some information loss. False otherwise.
+         *  Adapter trait signalizing that the adapter can possibly skip some Markdown
+         * nodes on a nextStartingNode() call.
+         *  If set to true, a call to nextStartingNode() can skip some nodes causing
+         * some information loss. False otherwise.
          */
         static const bool nextSkipsUnexpected = false;
     };
@@ -180,21 +181,23 @@ namespace snowcrash {
     /** Parser Adapter for parsing list-defined sections */
     struct ListSectionAdapter {
 
-        static const MarkdownNodeIterator startingNode(const MarkdownNodeIterator& seed) {
+        static const MarkdownNodeIterator startingNode(const MarkdownNodeIterator& seed)
+        {
             if (seed->type != mdp::ListItemMarkdownNodeType)
                 throw ADAPTER_MISMATCH_ERR;
 
             return seed->children().begin();
         }
 
-        static const MarkdownNodes& startingNodeSiblings(const MarkdownNodeIterator& seed,
-                                                         const MarkdownNodes& siblings) {
+        static const MarkdownNodes& startingNodeSiblings(
+            const MarkdownNodeIterator& seed, const MarkdownNodes& siblings)
+        {
             return seed->children();
         }
 
-        static const MarkdownNodeIterator nextStartingNode(const MarkdownNodeIterator& seed,
-                                                           const MarkdownNodes& siblings,
-                                                           const MarkdownNodeIterator& cur) {
+        static const MarkdownNodeIterator nextStartingNode(
+            const MarkdownNodeIterator& seed, const MarkdownNodes& siblings, const MarkdownNodeIterator& cur)
+        {
             if (seed == siblings.end())
                 return seed;
 
@@ -208,20 +211,22 @@ namespace snowcrash {
     struct BlueprintSectionAdapter {
 
         /** \return Node to start parsing with */
-        static const MarkdownNodeIterator startingNode(const MarkdownNodeIterator& seed) {
+        static const MarkdownNodeIterator startingNode(const MarkdownNodeIterator& seed)
+        {
             return seed;
         }
 
         /** \return Collection of siblings to starting Node */
-        static const MarkdownNodes& startingNodeSiblings(const MarkdownNodeIterator& seed,
-                                                         const MarkdownNodes& siblings) {
+        static const MarkdownNodes& startingNodeSiblings(
+            const MarkdownNodeIterator& seed, const MarkdownNodes& siblings)
+        {
             return siblings;
         }
 
         /** \return Starting node for next parsing */
-        static const MarkdownNodeIterator nextStartingNode(const MarkdownNodeIterator& seed,
-                                                           const MarkdownNodes& siblings,
-                                                           const MarkdownNodeIterator& cur) {
+        static const MarkdownNodeIterator nextStartingNode(
+            const MarkdownNodeIterator& seed, const MarkdownNodes& siblings, const MarkdownNodeIterator& cur)
+        {
             return cur;
         }
 

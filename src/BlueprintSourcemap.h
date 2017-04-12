@@ -236,6 +236,17 @@ namespace snowcrash {
     /** Source Map of Collection of Elements */
     SOURCE_MAP_COLLECTION(Element, Elements)
 
+    
+    /**
+     * Source Map Structure for Resource Prototypes (Category Element)
+     */
+    template<>
+    struct SourceMap<ResourcePrototype> : public SourceMapBase {
+
+        SourceMap<Literal> name;
+        SourceMap<Responses> responses;
+    };
+
     /**
      * Source Map Structure for Element
      */
@@ -260,6 +271,9 @@ namespace snowcrash {
 
             /** OR Source Map of Data Structure */
             SourceMap<DataStructure> dataStructure;
+            
+            /** OR Source Map of Data Structure */
+            SourceMap<ResourcePrototype> resourcePrototype;
 
             /** OR Source Map of Collection of elements */
             SourceMap<Elements>& elements();
@@ -320,6 +334,13 @@ namespace snowcrash {
     struct SourceMap<DataStructureGroup> : public SourceMap<Element> {
     };
 
+    /**
+     * Source Map Structure for Resource Prototypes (Category Element)
+     */
+    template<>
+    struct SourceMap<ResourcePrototypes> : public SourceMap<Element> {
+    };
+    
     /**
      *  \brief API Blueprint Sourcemap AST
      *

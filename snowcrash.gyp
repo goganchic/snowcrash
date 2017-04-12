@@ -120,6 +120,8 @@
         'src/RelationParser.h',
         'src/ResourceGroupParser.h',
         'src/ResourceParser.h',
+        'src/ResourcePrototypesParser.h',
+        'src/ResourcePrototypeParser.h',
         'src/SectionParser.h',
         'src/SectionProcessor.h',
         'src/SignatureSectionProcessor.h',

@@ -57,11 +57,17 @@ namespace snowcrash {
         /** Variable to store the current named type */
         mson::Literal namedTypeContext;
 
+        std::vector<ResourcePrototypeNames> resourcePrototypesChain;
+        
+        ResourcePrototypesTable resourcePrototypesTable;
+
         /** Model Table */
         ModelTable modelTable;
 
         /** Model Table Sourcemap */
         ModelSourceMapTable modelSourceMapTable;
+        
+        
 
         /** Source Data */
         const mdp::ByteBuffer& sourceData;

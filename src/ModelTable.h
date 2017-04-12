@@ -24,6 +24,8 @@
 // Symbol identifier regex
 #define SYMBOL_IDENTIFIER "([^][()]+)"
 
+#define RESOURCE_PROTOTYPE "(\\(([^][()]+)\\))"
+
 namespace snowcrash {
 
     /** Symbol reference matching regex */

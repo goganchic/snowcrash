@@ -11,11 +11,12 @@
 
 #include "SectionParser.h"
 #include "ResourceParser.h"
+#include "ResourcePrototypesParser.h"
 #include "RegexMatch.h"
 
 namespace snowcrash {
 
-    const char* const GroupHeaderRegex = "^[[:blank:]]*[Gg]roup[[:blank:]]+" SYMBOL_IDENTIFIER "[[:blank:]]*$";
+    const char* const GroupHeaderRegex = "^[[:blank:]]*[Gg]roup[[:blank:]]+" SYMBOL_IDENTIFIER "[[:blank:]]*" RESOURCE_PROTOTYPE "?[[:blank:]]*$";
 
     /** Internal type alias for Collection iterator of Resource */
     typedef Collection<ResourceGroup>::const_iterator ResourceGroupIterator;
@@ -41,14 +42,54 @@ namespace snowcrash {
             // Resources only, parse as exclusive nested sections
             if (nestedType != UndefinedSectionType) {
                 layout = ExclusiveNestedSectionLayout;
+                pd.resourcePrototypesChain.push_back(ResourcePrototypeNames());
                 return cur;
             }
 
             CaptureGroups captureGroups;
 
-            if (RegexCapture(node->text, GroupHeaderRegex, captureGroups, 3)) {
+            if (RegexCapture(node->text, GroupHeaderRegex, captureGroups, 5)) {
                 out.node.attributes.name = captureGroups[1];
+                Literal protoNameString = captureGroups[3];
+                ResourcePrototypeNames protoNames;
+
+                if (!protoNameString.empty()) {
+                    Literal protoName;
+                    size_t pos = 0;
+
+                    while (!protoNameString.empty()) {
+                        pos = protoNameString.find(",");
+
+                        if (pos == std::string::npos) {
+                            pos = protoNameString.size();
+                        }
+
+                        protoName = protoNameString.substr(0, pos);
+
+                        TrimString(protoName);
+
+                        if (!protoName.empty() && pd.resourcePrototypesTable.find(protoName) == pd.resourcePrototypesTable.end()) {
+                            std::stringstream ss;
+                            ss << "unknown resource prototype '" << protoName << "'";
+
+                            mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(node->sourceMap, pd.sourceCharacterIndex);
+                            throw Error(ss.str(), ResourcePrototypeError, sourceMap);
+                        }
+
+                        protoNames.push_back(protoName);
+
+                        if (pos < protoNameString.size()) {
+                            pos++;
+                        }
+
+                        protoNameString.erase(0, pos);
+                    }
+                }
+                pd.resourcePrototypesChain.push_back(protoNames);
+
                 TrimString(out.node.attributes.name);
+            } else {
+                pd.resourcePrototypesChain.push_back(ResourcePrototypeNames());
             }
 
             if (pd.exportSourceMap() && !out.node.attributes.name.empty()) {
@@ -135,6 +176,18 @@ namespace snowcrash {
                     out.sourceMap.content.elements().collection.push_back(resourceElementSM);
                 }
             }
+            else if (pd.sectionContext() == ResourcePrototypesSectionType) {
+                IntermediateParseResult<ResourcePrototypes> resourcePrototypes(out.report);
+                cur = ResourcePrototypesParser::parse(node, siblings, pd, resourcePrototypes);
+
+                out.node.content.elements().push_back(resourcePrototypes.node);
+
+                // TODO: Is it required to do something here?
+
+                if (pd.exportSourceMap()) {
+                    out.sourceMap.content.elements().collection.push_back(resourcePrototypes.sourceMap);
+                }
+            }
 
             return cur;
         }
@@ -180,6 +233,8 @@ namespace snowcrash {
                 out.sourceMap.element = out.node.element;
                 out.sourceMap.category = out.node.category;
             }
+            
+            pd.resourcePrototypesChain.pop_back();
         }
 
         static SectionType sectionType(const MarkdownNodeIterator& node) {
@@ -200,12 +255,27 @@ namespace snowcrash {
 
         static SectionType nestedSectionType(const MarkdownNodeIterator& node) {
 
-            // Return ResourceSectionType or UndefinedSectionType
-            return SectionProcessor<Resource>::sectionType(node);
+            SectionType nestedType = UndefinedSectionType;
+
+            // Check if ResourcePrototypes section
+            nestedType = SectionProcessor<ResourcePrototypes>::sectionType(node);
+
+            if (nestedType != UndefinedSectionType) {
+                return nestedType;
+            }
+
+            // Check if Resource section
+            nestedType = SectionProcessor<Resource>::sectionType(node);
+
+            if (nestedType != UndefinedSectionType) {
+                return nestedType;
+            }
+
+            return UndefinedSectionType;
         }
 
         static SectionTypes upperSectionTypes() {
-            return {ResourceGroupSectionType, DataStructureGroupSectionType};
+            return {ResourceGroupSectionType, DataStructureGroupSectionType, ResourcePrototypesSectionType};
         }
 
         static bool isDescriptionNode(const MarkdownNodeIterator& node,

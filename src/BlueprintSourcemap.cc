@@ -44,6 +44,7 @@ SourceMap<Element>::Content& SourceMap<Element>::Content::operator=(const Source
     this->copy = rhs.copy;
     this->resource = rhs.resource;
     this->dataStructure = rhs.dataStructure;
+    this->resourcePrototype = rhs.resourcePrototype;
     m_elements.reset(::new SourceMap<Elements>(*rhs.m_elements.get()));
 
     return *this;

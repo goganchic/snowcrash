@@ -20,13 +20,13 @@
 namespace snowcrash {
 
     /** Nameless resource matching regex */
-    const char* const ResourceHeaderRegex = "^[[:blank:]]*(" HTTP_REQUEST_METHOD "[[:blank:]]+)?" URI_TEMPLATE "$";
+    const char* const ResourceHeaderRegex = "^[[:blank:]]*(" HTTP_REQUEST_METHOD "[[:blank:]]+)?" URI_TEMPLATE "([[:blank:]]+" RESOURCE_PROTOTYPE ")?$";
 
     /** Named resource matching regex */
-    const char* const NamedResourceHeaderRegex = "^[[:blank:]]*" SYMBOL_IDENTIFIER "[[:blank:]]+\\[" URI_TEMPLATE "]$";
+    const char* const NamedResourceHeaderRegex = "^[[:blank:]]*" SYMBOL_IDENTIFIER "[[:blank:]]+\\[" URI_TEMPLATE "]([[:blank:]]+" RESOURCE_PROTOTYPE ")?$";
 
     /** Named endpoint matching regex */
-    const char* const NamedEndpointHeaderRegex = "^[[:blank:]]*" SYMBOL_IDENTIFIER "[[:blank:]]+\\[" HTTP_REQUEST_METHOD "[[:blank:]]+" URI_TEMPLATE "]$";
+    const char* const NamedEndpointHeaderRegex = "^[[:blank:]]*" SYMBOL_IDENTIFIER "[[:blank:]]+\\[" HTTP_REQUEST_METHOD "[[:blank:]]+" URI_TEMPLATE "]([[:blank:]]+" RESOURCE_PROTOTYPE ")?$";
 
     /** Internal type alias for Collection iterator of Resource */
     typedef Collection<Resource>::const_iterator ResourceIterator;
@@ -46,23 +46,27 @@ namespace snowcrash {
             CaptureGroups captureGroups;
 
             // If Abbreviated resource section
-            if (RegexCapture(node->text, ResourceHeaderRegex, captureGroups, 4)) {
+            if (RegexCapture(node->text, ResourceHeaderRegex, captureGroups, 7)) {
 
                 out.node.uriTemplate = captureGroups[3];
+
+                processProtoNames(captureGroups[6], node, pd);
 
                 // Make this section an action
                 if (!captureGroups[2].empty()) {
                     return processNestedAction(node, node->parent().children(), pd, layout, out);
                 }
-            } else if (RegexCapture(node->text, NamedEndpointHeaderRegex, captureGroups, 5)) {
-
+            } else if (RegexCapture(node->text, NamedEndpointHeaderRegex, captureGroups, 7)) {
                 out.node.name = captureGroups[1];
                 TrimString(out.node.name);
                 out.node.uriTemplate = captureGroups[3];
 
+                processProtoNames(captureGroups[6], node, pd);
+
                 return processNestedAction(node, node->parent().children(), pd, layout, out);
             } else {
-                matchNamedResourceHeader(node, out.node);
+                captureGroups = matchNamedResourceHeader(node, out.node);
+                processProtoNames(captureGroups[5], node, pd);
             }
 
             if (pd.exportSourceMap()) {
@@ -76,6 +80,44 @@ namespace snowcrash {
             }
 
             return ++MarkdownNodeIterator(node);
+        }
+
+        static void processProtoNames(Literal& protoNameString, const MarkdownNodeIterator& node, SectionParserData& pd) {
+            ResourcePrototypeNames protoNames;
+
+            if (!protoNameString.empty()) {
+                Literal protoName;
+                size_t pos = 0;
+
+                while (!protoNameString.empty()) {
+                    pos = protoNameString.find(",");
+
+                    if (pos == std::string::npos) {
+                        pos = protoNameString.size();
+                    }
+
+                    protoName = protoNameString.substr(0, pos);
+
+                    TrimString(protoName);
+
+                    if (!protoName.empty() && pd.resourcePrototypesTable.find(protoName) == pd.resourcePrototypesTable.end()) {
+                        std::stringstream ss;
+                        ss << "unknown resource prototype '" << protoName << "'";
+
+                        mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(node->sourceMap, pd.sourceCharacterIndex);
+                        throw Error(ss.str(), ResourcePrototypeError, sourceMap);
+                    }
+
+                    protoNames.push_back(protoName);
+
+                    if (pos < protoNameString.size()) {
+                        pos++;
+                    }
+
+                    protoNameString.erase(0, pos);
+                }
+            }
+            pd.resourcePrototypesChain.push_back(protoNames);
         }
 
         static MarkdownNodeIterator processNestedSection(const MarkdownNodeIterator& node,
@@ -264,7 +306,7 @@ namespace snowcrash {
         }
 
         static SectionTypes upperSectionTypes() {
-            return {ResourceGroupSectionType, ResourceSectionType, DataStructureGroupSectionType};
+            return {ResourceGroupSectionType, ResourceSectionType, DataStructureGroupSectionType, ResourcePrototypesSectionType};
         }
 
         static void finalize(const MarkdownNodeIterator& node,
@@ -303,6 +345,8 @@ namespace snowcrash {
                     out.sourceMap.headers.collection.clear();
                 }
             }
+
+            pd.resourcePrototypesChain.pop_back();
         }
 
         /**
@@ -311,17 +355,19 @@ namespace snowcrash {
          * \param node Markdown node to process
          * \param resource Resource data structure
          */
-        static void matchNamedResourceHeader(const MarkdownNodeIterator& node,
+        static CaptureGroups matchNamedResourceHeader(const MarkdownNodeIterator& node,
                                              Resource& resource) {
 
             CaptureGroups captureGroups;
 
-            if (RegexCapture(node->text, NamedResourceHeaderRegex, captureGroups, 4)) {
+            if (RegexCapture(node->text, NamedResourceHeaderRegex, captureGroups, 7)) {
 
                 resource.name = captureGroups[1];
                 TrimString(resource.name);
                 resource.uriTemplate = captureGroups[2];
             }
+
+            return captureGroups;
         }
 
         /**

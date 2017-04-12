@@ -38,6 +38,9 @@ namespace snowcrash {
             MarkdownNodeIterator cur = Adapter::startingNode(node, pd);
             const MarkdownNodes& collection = Adapter::startingNodeSiblings(node, siblings);
 
+            // TODO: Implement prototypes code here
+            //pd.commonResponses.push_back(Responses());
+
             // Signature node
             MarkdownNodeIterator lastCur = cur;
             cur = SectionProcessor<T>::processSignature(cur, collection, pd, layout, out);
@@ -49,6 +52,7 @@ namespace snowcrash {
 
                 SectionProcessor<T>::finalize(node, pd, out);
 
+                // pd.commonResponses.pop_back();
                 return Adapter::nextStartingNode(node, siblings, cur);
             }
 
@@ -56,12 +60,15 @@ namespace snowcrash {
             if (layout == RedirectSectionLayout) {
                 SectionProcessor<T>::finalize(node, pd, out);
 
+                // pd.commonResponses.pop_back();
                 return Adapter::nextStartingNode(node, siblings, cur);
             }
 
             // Default layout
-            if (lastCur == cur)
+            if (lastCur == cur) {
+                // pd.commonResponses.pop_back();
                 return Adapter::nextStartingNode(node, siblings, cur);
+            }
 
             // Description nodes
             while(cur != collection.end() &&
@@ -70,8 +77,10 @@ namespace snowcrash {
                 lastCur = cur;
                 cur = SectionProcessor<T>::processDescription(cur, collection, pd, out);
 
-                if (lastCur == cur)
+                if (lastCur == cur) {
+                    // pd.commonResponses.pop_back();
                     return Adapter::nextStartingNode(node, siblings, cur);
+                }
             }
 
             // Content nodes
@@ -81,8 +90,10 @@ namespace snowcrash {
                 lastCur = cur;
                 cur = SectionProcessor<T>::processContent(cur, collection, pd, out);
 
-                if (lastCur == cur)
+                if (lastCur == cur) {
+                    // pd.commonResponses.pop_back();
                     return Adapter::nextStartingNode(node, siblings, cur);
+                }
             }
 
             // Nested Sections
@@ -90,6 +101,7 @@ namespace snowcrash {
 
             SectionProcessor<T>::finalize(node, pd, out);
 
+            // pd.commonResponses.pop_back();
             return Adapter::nextStartingNode(node, siblings, cur);
         }
 
@@ -119,7 +131,7 @@ namespace snowcrash {
                     cur = SectionProcessor<T>::processNestedSection(cur, collection, pd, out);
                 }
                 else if (Adapter::nextSkipsUnexpected ||
-                         SectionProcessor<T>::isUnexpectedNode(cur, pd.sectionContext())) {
+                              SectionProcessor<T>::isUnexpectedNode(cur, pd.sectionContext())) {
 
                     cur = SectionProcessor<T>::processUnexpectedNode(cur, collection, pd, lastSectionType, out);
                 }

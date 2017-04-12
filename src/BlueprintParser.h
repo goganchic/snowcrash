@@ -15,6 +15,7 @@
 #include "ResourceGroupParser.h"
 #include "DataStructureGroupParser.h"
 #include "SectionParser.h"
+#include "ResourcePrototypesParser.h"
 #include "RegexMatch.h"
 #include "CodeBlockUtility.h"
 
@@ -141,6 +142,17 @@ namespace snowcrash {
                     out.sourceMap.content.elements().collection.push_back(dataStructureGroup.sourceMap);
                 }
             }
+            else if (pd.sectionContext() == ResourcePrototypesSectionType) {
+                // TODO: Fix this code
+                IntermediateParseResult<ResourcePrototypes> resourcePrototypes(out.report);
+                cur = ResourcePrototypesParser::parse(node, siblings, pd, resourcePrototypes);
+
+                out.node.content.elements().push_back(resourcePrototypes.node);
+
+                if (pd.exportSourceMap()) {
+                    out.sourceMap.content.elements().collection.push_back(resourcePrototypes.sourceMap);
+                }
+            }
 
             return cur;
         }
@@ -175,15 +187,17 @@ namespace snowcrash {
 
                 if (cur->type == mdp::HeaderMarkdownNodeType) {
 
-                    // If the current node is a Resource or DataStructures section, assign it as context
-                    // Otherwise, make sure the current context is not DataStructures section and remove the context
+                    // If the current node is a Resource or DataStructures section or ResroucePrototypes, assign it as context
+                    // Otherwise, make sure the current context is not DataStructures and ResourcePrototypes section and remove the context
                     if (sectionType == ResourceSectionType ||
-                        sectionType == DataStructureGroupSectionType) {
+                        sectionType == DataStructureGroupSectionType ||
+                        sectionType == ResourcePrototypesSectionType) {
 
                         contextSectionType = sectionType;
                         contextCur = cur;
                     }
-                    else if (contextSectionType != DataStructureGroupSectionType) {
+                    else if (contextSectionType != DataStructureGroupSectionType &&
+                             contextSectionType != ResourcePrototypesSectionType) {
 
                         contextSectionType = UndefinedSectionType;
                     }
@@ -201,6 +215,18 @@ namespace snowcrash {
                         }
                         else if (sectionType == UndefinedSectionType) {
                             fillNamedTypeTables(cur, pd, cur->text, out.report);
+                        }
+                    }
+                    
+                    if (contextSectionType == ResourcePrototypesSectionType) {
+
+                        if (sectionType != UndefinedSectionType && sectionType != ResourcePrototypesSectionType) {
+
+                            contextSectionType = UndefinedSectionType;
+                        }
+                        else if (sectionType == UndefinedSectionType) {
+
+                            fillResourcePrototypeTables(cur, siblings, pd, cur->text, out.report);
                         }
                     }
                 }
@@ -226,6 +252,59 @@ namespace snowcrash {
 
             // Resolve all named type base table entries
             resolveNamedTypeTables(pd, out.report);
+
+            resolveResourceProrotypesTable(pd, out.report);
+        }
+
+        static void resolveResourceProrotypesTable(SectionParserData& pd,
+                                                   Report& report) {
+            ResourcePrototypesTable::iterator it;
+            std::set<Literal> activePrototypes;
+            
+
+            for (it = pd.resourcePrototypesTable.begin();
+                 it != pd.resourcePrototypesTable.end();
+                 it++) {
+                bool res = resolvePrototype(it->first, pd, report, activePrototypes);
+                if (!res) {
+                    return;
+                }
+            }
+        }
+
+        static bool resolvePrototype(const Literal& protoName, SectionParserData& pd, Report& report, std::set<Literal> activeProtos) {
+            if (activeProtos.find(protoName) != activeProtos.end()) {
+                std::stringstream ss;
+                ss << "resource prorotype '" << protoName << "' circularly referencing itself";
+
+                mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(pd.resourcePrototypesTable[protoName].second, pd.sourceCharacterIndex);
+                report.error = Error(ss.str(), MSONError, sourceMap);
+                return false;
+            }
+
+            activeProtos.insert(protoName);
+
+            ResourcePrototypeDefinition& proto = pd.resourcePrototypesTable[protoName].first;
+
+            for (auto baseNameIt = proto.baseNames.begin(); baseNameIt != proto.baseNames.end(); ++baseNameIt) {
+                if (pd.resourcePrototypesTable.find(*baseNameIt) == pd.resourcePrototypesTable.end()) {
+                    std::stringstream ss;
+                    ss << "resource prototype '" << *baseNameIt << "' is not defined in the document";
+
+                    mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(pd.resourcePrototypesTable[protoName].second, pd.sourceCharacterIndex);
+                    report.error = Error(ss.str(), MSONError, sourceMap);
+                    return false;
+                }
+
+                bool res = resolvePrototype(*baseNameIt, pd, report, activeProtos);
+
+                if (!res) {
+                    return false;
+                }
+            }
+
+            activeProtos.erase(proto.name);
+            return true;
         }
 
         static void checkForPossibleSectionMistakes(const MarkdownNodeIterator& node, SectionParserData& pd, Report& report) {
@@ -258,6 +337,13 @@ namespace snowcrash {
 
             // Check if DataStructures section
             nestedType = SectionProcessor<DataStructureGroup>::sectionType(node);
+
+            if (nestedType != UndefinedSectionType) {
+                return nestedType;
+            }
+
+            // Check if ResourcePrototypes section
+            nestedType = SectionProcessor<ResourcePrototypes>::sectionType(node);
 
             if (nestedType != UndefinedSectionType) {
                 return nestedType;
@@ -388,6 +474,35 @@ namespace snowcrash {
                 // If there is no specification, an object is assumed
                 pd.namedTypeBaseTable[identifier] = mson::ImplicitObjectBaseType;
             }
+        }
+        
+        static void fillResourcePrototypeTables(const MarkdownNodeIterator& node,
+                                                const MarkdownNodes& siblings,
+                                                SectionParserData& pd,
+                                                const mdp::ByteBuffer& subject,
+                                                Report& report) {
+
+            Report tmpReport;
+            
+            SignatureTraits traits(SignatureTraits::IdentifierTrait |
+                                   SignatureTraits::AttributesTrait);
+            
+            IntermediateParseResult<ResourcePrototype> resourcePrototype(tmpReport);
+            ResourcePrototypeParser::parse(node, siblings, pd, resourcePrototype);
+            ResourcePrototypeDefinition& typeDefinition = resourcePrototype.node.content.resourcePrototype;
+            
+            if (pd.resourcePrototypesTable.find(typeDefinition.name) != pd.resourcePrototypesTable.end()) {
+                
+                std::stringstream ss;
+                ss << "resource prototype '" << typeDefinition.name << "' is defined more than once";
+                
+                mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(node->sourceMap, pd.sourceCharacterIndex);
+                report.error = Error(ss.str(), ResourcePrototypeError, sourceMap);
+                return;
+            }
+            
+            pd.resourcePrototypesTable[typeDefinition.name] = std::make_pair(typeDefinition, node->sourceMap);
+            
         }
 
         /**

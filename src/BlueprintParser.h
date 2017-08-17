@@ -474,7 +474,7 @@ namespace snowcrash {
                                    SignatureTraits::AttributesTrait);
             
             IntermediateParseResult<ResourcePrototype> resourcePrototype(tmpReport);
-            MarkdownNodeIterator cur = ResourcePrototypeParser::parse(node, siblings, pd, resourcePrototype);
+            ResourcePrototypeParser::parse(node, siblings, pd, resourcePrototype);
             ResourcePrototypeDefinition& typeDefinition = resourcePrototype.node.content.resourcePrototypeDefinition;
             
             if (pd.resourcePrototypesTable.find(typeDefinition.name) != pd.resourcePrototypesTable.end()) {

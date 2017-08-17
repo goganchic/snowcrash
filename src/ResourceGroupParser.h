@@ -14,8 +14,6 @@
 #include "ResourcePrototypesParser.h"
 #include "RegexMatch.h"
 
-#define RESOURCE_PROTOTYPE "(\\(([^][()]+)\\))"
-
 namespace snowcrash {
 
     const char* const GroupHeaderRegex = "^[[:blank:]]*[Gg]roup[[:blank:]]+" SYMBOL_IDENTIFIER "[[:blank:]]*" RESOURCE_PROTOTYPE "?[[:blank:]]*$";

@@ -26,7 +26,7 @@
  *
  *  See previous technical note (using macro).
  */
-#define URI_TEMPLATE "(/.*)"
+#define URI_TEMPLATE "(/[^[:blank:]]*[[:blank:]]*)"
 
 namespace snowcrash {
 

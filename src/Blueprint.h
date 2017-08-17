@@ -70,6 +70,12 @@ namespace snowcrash {
      *  E.g. "Content-Type: application/json"
      */
     typedef KeyValuePair Header;
+    
+    typedef std::string Literal;
+    
+    struct ResourcePrototypeDefinition;
+    
+    typedef std::map<Literal, std::pair<ResourcePrototypeDefinition, mdp::BytesRangeSet>> ResourcePrototypesTable;
 
     /**
      * Default Container for collections.
@@ -370,19 +376,30 @@ namespace snowcrash {
 
     /** Collection of elements */
     typedef std::vector<Element> Elements;
+    
+    struct ResourcePrototypeDefinition {
+        
+        ResourcePrototypeDefinition()
+        : name(""), baseName("") {}
+        
+        Literal name;
+        Literal baseName;
+        Responses responses;
+        
+    };
 
     /** Element */
     struct Element {
 
         /** Class of an element */
         enum Class {
-            UndefinedElement = 0, // Unknown
-            CategoryElement,      // Group of other elements
-            CopyElement,          // Human readable text
-            AssetElement,         // Asset of API description
-            ResourceElement,      // Resource
-            DataStructureElement, // Data Structure
-            CommonDataElement     // Common Data
+            UndefinedElement = 0,       // Unknown
+            CategoryElement,            // Group of other elements
+            CopyElement,                // Human readable text
+            AssetElement,               // Asset of API description
+            ResourceElement,            // Resource
+            DataStructureElement,       // Data Structure
+            ResourcePrototypeElement    // Resource Prototype
         };
 
         /** Attributes of an element */
@@ -408,8 +425,8 @@ namespace snowcrash {
             Elements& elements();
             const Elements& elements() const;
 
-            /** OR Common responses */
-            Responses responses;
+            /** OR Resource prototype definition */
+            ResourcePrototypeDefinition resourcePrototypeDefinition;
 
             /** Constructor */
             Content();
@@ -429,9 +446,10 @@ namespace snowcrash {
 
         /** Type of Category element (parser internal flag) */
         enum Category {
-            UndefinedCategory = 0,     // Unknown
-            ResourceGroupCategory,     // Resource Group
-            DataStructureGroupCategory // Data Structure Group
+            UndefinedCategory = 0,          // Unknown
+            ResourceGroupCategory,          // Resource Group
+            DataStructureGroupCategory,     // Data Structure Group
+            ResourcePrototypesGroupCategory // Resource Prototypes Group
         };
 
         /** Type of the element */
@@ -472,9 +490,15 @@ namespace snowcrash {
     };
 
     /**
-     * Common Data
+     * Resource Prototypes
      */
-    struct CommonData : public Element {
+    struct ResourcePrototypes : public Element {
+    };
+    
+    /**
+     * Resource Prototype
+     */
+    struct ResourcePrototype : public Element {
     };
 
     /**

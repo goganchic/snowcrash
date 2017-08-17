@@ -56,12 +56,18 @@ namespace snowcrash {
 
         /** Variable to store the current named type */
         mson::Literal namedTypeContext;
+        
+        std::vector<Literal> resourcePrototypesChain;
+        
+        ResourcePrototypesTable resourcePrototypesTable;
 
         /** Model Table */
         ModelTable modelTable;
 
         /** Model Table Sourcemap */
         ModelSourceMapTable modelSourceMapTable;
+        
+        
 
         /** Source Data */
         const mdp::ByteBuffer& sourceData;
@@ -75,9 +81,6 @@ namespace snowcrash {
         /** Sections Context */
         typedef std::vector<SectionType> SectionsStack;
         SectionsStack sectionsContext;
-
-        /** Common Responses */
-        Collection<Responses>::type commonResponses;
 
         /** \returns Actual Section Context */
         SectionType sectionContext() const {

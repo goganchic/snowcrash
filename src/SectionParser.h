@@ -38,7 +38,8 @@ namespace snowcrash {
             MarkdownNodeIterator cur = Adapter::startingNode(node, pd);
             const MarkdownNodes& collection = Adapter::startingNodeSiblings(node, siblings);
 
-            pd.commonResponses.push_back(Responses());
+            // TODO: Implement prototypes code here
+            //pd.commonResponses.push_back(Responses());
 
             // Signature node
             MarkdownNodeIterator lastCur = cur;
@@ -51,7 +52,7 @@ namespace snowcrash {
 
                 SectionProcessor<T>::finalize(node, pd, out);
 
-                pd.commonResponses.pop_back();
+                // pd.commonResponses.pop_back();
                 return Adapter::nextStartingNode(node, siblings, cur);
             }
 
@@ -59,13 +60,13 @@ namespace snowcrash {
             if (layout == RedirectSectionLayout) {
                 SectionProcessor<T>::finalize(node, pd, out);
 
-                pd.commonResponses.pop_back();
+                // pd.commonResponses.pop_back();
                 return Adapter::nextStartingNode(node, siblings, cur);
             }
 
             // Default layout
             if (lastCur == cur) {
-                pd.commonResponses.pop_back();
+                // pd.commonResponses.pop_back();
                 return Adapter::nextStartingNode(node, siblings, cur);
             }
 
@@ -77,7 +78,7 @@ namespace snowcrash {
                 cur = SectionProcessor<T>::processDescription(cur, collection, pd, out);
 
                 if (lastCur == cur) {
-                    pd.commonResponses.pop_back();
+                    // pd.commonResponses.pop_back();
                     return Adapter::nextStartingNode(node, siblings, cur);
                 }
             }
@@ -90,7 +91,7 @@ namespace snowcrash {
                 cur = SectionProcessor<T>::processContent(cur, collection, pd, out);
 
                 if (lastCur == cur) {
-                    pd.commonResponses.pop_back();
+                    // pd.commonResponses.pop_back();
                     return Adapter::nextStartingNode(node, siblings, cur);
                 }
             }
@@ -100,7 +101,7 @@ namespace snowcrash {
 
             SectionProcessor<T>::finalize(node, pd, out);
 
-            pd.commonResponses.pop_back();
+            // pd.commonResponses.pop_back();
             return Adapter::nextStartingNode(node, siblings, cur);
         }
 

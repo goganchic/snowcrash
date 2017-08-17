@@ -17,7 +17,7 @@
 #include "ResourceGroupParser.h"
 #include "MSONTypeSectionParser.h"
 #include "DataStructureGroupParser.h"
-#include "CommonDataParser.h"
+#include "ResourcePrototypesParser.h"
 
 using namespace snowcrash;
 
@@ -52,7 +52,7 @@ SectionType snowcrash::SectionKeywordSignature(const mdp::MarkdownNodeIterator& 
     TYPECHECK(Action)
     TYPECHECK(ResourceGroup)
     TYPECHECK(DataStructureGroup)
-    TYPECHECK(CommonData)
+    TYPECHECK(ResourcePrototypes)
 
     return type;
 }

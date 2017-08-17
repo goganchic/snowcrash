@@ -51,7 +51,8 @@ namespace snowcrash {
         MSONValueMembersSectionType,    /// < MSON Value Members Type Section
         MSONValueMemberSectionType,     /// < MSON Value Member Type
         MSONSectionType,                /// < MSON Property Member or Value Member
-        CommonDataSectionType           /// < Common data section
+        ResourcePrototypesSectionType,  /// < Resource prototypes section
+        ResourcePrototypeSectionType    /// < Resource prototypes section
     };
 
     /** \return Human readable name for given %SectionType */

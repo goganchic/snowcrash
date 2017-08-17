@@ -15,7 +15,7 @@
 #include "ResourceGroupParser.h"
 #include "DataStructureGroupParser.h"
 #include "SectionParser.h"
-#include "CommonDataParser.h"
+#include "ResourcePrototypesParser.h"
 #include "RegexMatch.h"
 #include "CodeBlockUtility.h"
 
@@ -142,18 +142,15 @@ namespace snowcrash {
                     out.sourceMap.content.elements().collection.push_back(dataStructureGroup.sourceMap);
                 }
             }
-            else if (pd.sectionContext() == CommonDataSectionType) {
-                IntermediateParseResult<CommonData> commonData(out.report);
-                cur = CommonDataParser::parse(node, siblings, pd, commonData);
+            else if (pd.sectionContext() == ResourcePrototypesSectionType) {
+                // TODO: Fix this code
+                IntermediateParseResult<ResourcePrototypes> resourcePrototypes(out.report);
+                cur = ResourcePrototypesParser::parse(node, siblings, pd, resourcePrototypes);
 
-                out.node.content.elements().push_back(commonData.node);
-
-                for (auto i = commonData.node.content.responses.begin(); i != commonData.node.content.responses.end(); ++i) {
-                    pd.commonResponses.back().push_back(*i);
-                }
+                out.node.content.elements().push_back(resourcePrototypes.node);
 
                 if (pd.exportSourceMap()) {
-                    out.sourceMap.content.elements().collection.push_back(commonData.sourceMap);
+                    out.sourceMap.content.elements().collection.push_back(resourcePrototypes.sourceMap);
                 }
             }
 
@@ -190,15 +187,17 @@ namespace snowcrash {
 
                 if (cur->type == mdp::HeaderMarkdownNodeType) {
 
-                    // If the current node is a Resource or DataStructures section, assign it as context
-                    // Otherwise, make sure the current context is not DataStructures section and remove the context
+                    // If the current node is a Resource or DataStructures section or ResroucePrototypes, assign it as context
+                    // Otherwise, make sure the current context is not DataStructures and ResourcePrototypes section and remove the context
                     if (sectionType == ResourceSectionType ||
-                        sectionType == DataStructureGroupSectionType) {
+                        sectionType == DataStructureGroupSectionType ||
+                        sectionType == ResourcePrototypesSectionType) {
 
                         contextSectionType = sectionType;
                         contextCur = cur;
                     }
-                    else if (contextSectionType != DataStructureGroupSectionType) {
+                    else if (contextSectionType != DataStructureGroupSectionType &&
+                             contextSectionType != ResourcePrototypesSectionType) {
 
                         contextSectionType = UndefinedSectionType;
                     }
@@ -216,6 +215,18 @@ namespace snowcrash {
                         }
                         else if (sectionType == UndefinedSectionType) {
                             fillNamedTypeTables(cur, pd, cur->text, out.report);
+                        }
+                    }
+                    
+                    if (contextSectionType == ResourcePrototypesSectionType) {
+
+                        if (sectionType != UndefinedSectionType && sectionType != ResourcePrototypesSectionType) {
+
+                            contextSectionType = UndefinedSectionType;
+                        }
+                        else if (sectionType == UndefinedSectionType) {
+
+                            fillResourcePrototypeTables(cur, siblings, pd, cur->text, out.report);
                         }
                     }
                 }
@@ -241,6 +252,45 @@ namespace snowcrash {
 
             // Resolve all named type base table entries
             resolveNamedTypeTables(pd, out.report);
+            
+            resolveResourceProrotypesTable(pd, out.report);
+        }
+        
+        static void resolveResourceProrotypesTable(SectionParserData& pd,
+                                                   Report& report) {
+            ResourcePrototypesTable::iterator it;
+            Literal proto;
+            
+            // First resolve dependency tables
+            for (it = pd.resourcePrototypesTable.begin();
+                 it != pd.resourcePrototypesTable.end();
+                 it++) {
+                
+                std::set<Literal> chain;
+                chain.insert(it->first);
+                proto = it->second.first.baseName;
+                while (!proto.empty()) {
+                    if (pd.resourcePrototypesTable.find(proto) == pd.resourcePrototypesTable.end()) {
+                        std::stringstream ss;
+                        ss << "resource prototype '" << proto << "' is not defined in the document";
+                        
+                        mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(it->second.second, pd.sourceCharacterIndex);
+                        report.error = Error(ss.str(), MSONError, sourceMap);
+                        return;
+                    }
+                    
+                    if (chain.find(proto) != chain.end()) {
+                        std::stringstream ss;
+                        ss << "resource prorotype '" << it->first << "' circularly referencing itself";
+                        
+                        mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(it->second.second, pd.sourceCharacterIndex);
+                        report.error = Error(ss.str(), MSONError, sourceMap);
+                        return;
+                    }
+                    chain.insert(proto);
+                    proto = pd.resourcePrototypesTable[proto].first.baseName;
+                }
+            }
         }
 
         static void checkForPossibleSectionMistakes(const MarkdownNodeIterator& node, SectionParserData& pd, Report& report) {
@@ -278,8 +328,8 @@ namespace snowcrash {
                 return nestedType;
             }
 
-            // Check if CommonData section
-            nestedType = SectionProcessor<CommonData>::sectionType(node);
+            // Check if ResourcePrototypes section
+            nestedType = SectionProcessor<ResourcePrototypes>::sectionType(node);
 
             if (nestedType != UndefinedSectionType) {
                 return nestedType;
@@ -410,6 +460,37 @@ namespace snowcrash {
                 // If there is no specification, an object is assumed
                 pd.namedTypeBaseTable[identifier] = mson::ImplicitObjectBaseType;
             }
+        }
+        
+        static void fillResourcePrototypeTables(const MarkdownNodeIterator& node,
+                                                const MarkdownNodes& siblings,
+                                                SectionParserData& pd,
+                                                const mdp::ByteBuffer& subject,
+                                                Report& report) {
+
+            Report tmpReport;
+            
+            SignatureTraits traits(SignatureTraits::IdentifierTrait |
+                                   SignatureTraits::AttributesTrait);
+            
+            IntermediateParseResult<ResourcePrototype> resourcePrototype(tmpReport);
+            MarkdownNodeIterator cur = ResourcePrototypeParser::parse(node, siblings, pd, resourcePrototype);
+            ResourcePrototypeDefinition& typeDefinition = resourcePrototype.node.content.resourcePrototypeDefinition;
+            
+            if (pd.resourcePrototypesTable.find(typeDefinition.name) != pd.resourcePrototypesTable.end()) {
+                
+                std::stringstream ss;
+                ss << "resource prototype '" << typeDefinition.name << "' is defined more than once";
+                
+                mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(node->sourceMap, pd.sourceCharacterIndex);
+                report.error = Error(ss.str(), ResourcePrototypeError, sourceMap);
+                return;
+            }
+            
+            Literal baseTypeName = typeDefinition.baseName;
+            
+            pd.resourcePrototypesTable[typeDefinition.name] = std::make_pair(typeDefinition, node->sourceMap);
+            
         }
 
         /**

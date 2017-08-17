@@ -11,12 +11,14 @@
 
 #include "SectionParser.h"
 #include "ResourceParser.h"
-#include "CommonDataParser.h"
+#include "ResourcePrototypesParser.h"
 #include "RegexMatch.h"
+
+#define RESOURCE_PROTOTYPE "(\\(([^][()]+)\\))"
 
 namespace snowcrash {
 
-    const char* const GroupHeaderRegex = "^[[:blank:]]*[Gg]roup[[:blank:]]+" SYMBOL_IDENTIFIER "[[:blank:]]*$";
+    const char* const GroupHeaderRegex = "^[[:blank:]]*[Gg]roup[[:blank:]]+" SYMBOL_IDENTIFIER "[[:blank:]]*" RESOURCE_PROTOTYPE "?[[:blank:]]*$";
 
     /** Internal type alias for Collection iterator of Resource */
     typedef Collection<ResourceGroup>::const_iterator ResourceGroupIterator;
@@ -47,9 +49,12 @@ namespace snowcrash {
 
             CaptureGroups captureGroups;
 
-            if (RegexCapture(node->text, GroupHeaderRegex, captureGroups, 3)) {
+            if (RegexCapture(node->text, GroupHeaderRegex, captureGroups, 5)) {
                 out.node.attributes.name = captureGroups[1];
+                pd.resourcePrototypesChain.push_back(captureGroups[3]);
                 TrimString(out.node.attributes.name);
+            } else {
+                pd.resourcePrototypesChain.push_back("");
             }
 
             if (pd.exportSourceMap() && !out.node.attributes.name.empty()) {
@@ -136,18 +141,16 @@ namespace snowcrash {
                     out.sourceMap.content.elements().collection.push_back(resourceElementSM);
                 }
             }
-            else if (pd.sectionContext() == CommonDataSectionType) {
-                IntermediateParseResult<CommonData> commonData(out.report);
-                cur = CommonDataParser::parse(node, siblings, pd, commonData);
+            else if (pd.sectionContext() == ResourcePrototypesSectionType) {
+                IntermediateParseResult<ResourcePrototypes> resourcePrototypes(out.report);
+                cur = ResourcePrototypesParser::parse(node, siblings, pd, resourcePrototypes);
 
-                out.node.content.elements().push_back(commonData.node);
+                out.node.content.elements().push_back(resourcePrototypes.node);
 
-                for (auto i = commonData.node.content.responses.begin(); i != commonData.node.content.responses.end(); ++i) {
-                    pd.commonResponses.back().push_back(*i);
-                }
+                // TODO: Is it required to do something here?
 
                 if (pd.exportSourceMap()) {
-                    out.sourceMap.content.elements().collection.push_back(commonData.sourceMap);
+                    out.sourceMap.content.elements().collection.push_back(resourcePrototypes.sourceMap);
                 }
             }
 
@@ -195,6 +198,8 @@ namespace snowcrash {
                 out.sourceMap.element = out.node.element;
                 out.sourceMap.category = out.node.category;
             }
+            
+            pd.resourcePrototypesChain.pop_back();
         }
 
         static SectionType sectionType(const MarkdownNodeIterator& node) {
@@ -217,8 +222,8 @@ namespace snowcrash {
 
             SectionType nestedType = UndefinedSectionType;
 
-            // Check if CommonData section
-            nestedType = SectionProcessor<CommonData>::sectionType(node);
+            // Check if ResourcePrototypes section
+            nestedType = SectionProcessor<ResourcePrototypes>::sectionType(node);
 
             if (nestedType != UndefinedSectionType) {
                 return nestedType;
@@ -235,7 +240,7 @@ namespace snowcrash {
         }
 
         static SectionTypes upperSectionTypes() {
-            return {ResourceGroupSectionType, DataStructureGroupSectionType, CommonDataSectionType};
+            return {ResourceGroupSectionType, DataStructureGroupSectionType, ResourcePrototypesSectionType};
         }
 
         static bool isDescriptionNode(const MarkdownNodeIterator& node,

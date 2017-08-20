@@ -45,77 +45,85 @@ namespace snowcrash {
      */
     template<>
     struct SectionProcessor<Action> : public SectionProcessorBase<Action> {
-        
+
         static MarkdownNodeIterator processSignature(const MarkdownNodeIterator& node,
                                                      const MarkdownNodes& siblings,
                                                      SectionParserData& pd,
                                                      SectionLayout& layout,
                                                      const ParseResultRef<Action>& out) {
-            
+
             actionHTTPMethodAndName(node, out.node.method, out.node.name, out.node.uriTemplate);
             TrimString(out.node.name);
-            
+
             mdp::ByteBuffer remainingContent;
             GetFirstLine(node->text, remainingContent);
-            
+
             if (pd.exportSourceMap()) {
                 if (!out.node.method.empty()) {
                     out.sourceMap.method.sourceMap = node->sourceMap;
                 }
-                
+
                 if (!out.node.name.empty()) {
                     out.sourceMap.name.sourceMap = node->sourceMap;
                 }
-                
+
                 if (!out.node.uriTemplate.empty()) {
                     out.sourceMap.uriTemplate.sourceMap = node->sourceMap;
                 }
             }
-            
+
             if (!remainingContent.empty()) {
                 out.node.description += remainingContent;
-                
+
                 if (pd.exportSourceMap()) {
                     out.sourceMap.description.sourceMap.append(node->sourceMap);
                 }
             }
-            
+
+            std::set<Literal> usedPrototypes;
+
             for (auto protoIt = pd.resourcePrototypesChain.begin(); protoIt != pd.resourcePrototypesChain.end(); ++protoIt) {
-                std::cout << "--- process proto " << *protoIt << std::endl;
-                if (pd.resourcePrototypesTable.find(*protoIt) != pd.resourcePrototypesTable.end()) {
+                Literal protoName = *protoIt;
+
+                while (!protoName.empty() &&
+                       pd.resourcePrototypesTable.find(protoName) != pd.resourcePrototypesTable.end() &&
+                       usedPrototypes.find(protoName) == usedPrototypes.end()) {
+                    usedPrototypes.insert(protoName);
                     ResourcePrototypeDefinition proto = pd.resourcePrototypesTable[*protoIt].first;
-                    std::cout << "responses size: " << proto.responses.size() << "\n";
+
                     for (auto j = proto.responses.begin(); j != proto.responses.end(); j++) {
-                        
+
                         IntermediateParseResult<Payload> payload(out.report);
-                        
+
                         if (out.node.examples.empty()) {
                             TransactionExample transaction;
                             SourceMap<TransactionExample> transactionSM;
-                            
+
                             out.node.examples.push_back(transaction);
-                            
+
                             if (pd.exportSourceMap()) {
                                 out.sourceMap.examples.collection.push_back(transactionSM);
                             }
                         }
-                        
+
                         // TODO: find out if this string is required
                         // checkPayload(sectionType, sourceMap, j->node, out);
-                        
+
                         out.node.examples.back().responses.push_back(*j);
-                        
+
                         if (pd.exportSourceMap()) {
                             out.sourceMap.examples.collection.back().responses.collection.push_back(payload.sourceMap);
                         }
                     }
+
+
+                    protoName = proto.baseName;
                 }
             }
-            
-            
+
             return ++MarkdownNodeIterator(node);
         }
-        
+
         static MarkdownNodeIterator processNestedSection(const MarkdownNodeIterator& node,
                                                          const MarkdownNodes& siblings,
                                                          SectionParserData& pd,

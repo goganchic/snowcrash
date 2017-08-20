@@ -252,10 +252,10 @@ namespace snowcrash {
 
             // Resolve all named type base table entries
             resolveNamedTypeTables(pd, out.report);
-            
+
             resolveResourceProrotypesTable(pd, out.report);
         }
-        
+
         static void resolveResourceProrotypesTable(SectionParserData& pd,
                                                    Report& report) {
             ResourcePrototypesTable::iterator it;

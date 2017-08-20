@@ -34,28 +34,28 @@ namespace snowcrash {
             IntermediateParseResult<ResourcePrototype> resourcePrototype(out.report);
             MarkdownNodeIterator cur = ResourcePrototypeParser::parse(node, siblings, pd, resourcePrototype);
             out.node.content.elements().push_back(resourcePrototype.node);
-            
+
             /// TODO Source map?
             if (pd.exportSourceMap()) {
                 SourceMap<Element> elementSM(Element::ResourcePrototypeElement);
                 elementSM.content.resourcePrototype.name = resourcePrototype.sourceMap.name;
                 elementSM.content.resourcePrototype.responses = resourcePrototype.sourceMap.responses;
-                
+
                 out.sourceMap.content.elements().collection.push_back(elementSM);
             }
-            
+
             return cur;
         }
 
         static void finalize(const MarkdownNodeIterator& node,
                              SectionParserData& pd,
                              const ParseResultRef<ResourcePrototypes>& out) {
-            
+
             out.node.element = Element::CategoryElement;
             out.node.category = Element::ResourcePrototypesGroupCategory;
 
             if (pd.exportSourceMap()) {
-                
+
                 out.sourceMap.element = out.node.element;
                 out.sourceMap.category = out.node.category;
             }
@@ -80,13 +80,13 @@ namespace snowcrash {
 
         static SectionType nestedSectionType(const MarkdownNodeIterator& node) {
             SectionType sectionType = SectionKeywordSignature(node);
-            
+
             if (node->type == mdp::HeaderMarkdownNodeType &&
                 sectionType == UndefinedSectionType) {
-                
+
                 return ResourcePrototypeSectionType;
             }
-            
+
             return UndefinedSectionType;
         }
 

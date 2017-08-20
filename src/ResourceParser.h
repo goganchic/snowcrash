@@ -321,7 +321,6 @@ namespace snowcrash {
 
             CaptureGroups captureGroups;
 
-            std::cout << NamedResourceHeaderRegex << "\n";
             if (RegexCapture(node->text, NamedResourceHeaderRegex, captureGroups, 7)) {
 
                 resource.name = captureGroups[1];

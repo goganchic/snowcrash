@@ -37,6 +37,7 @@ namespace snowcrash {
 
             parseResourcePrototypeDefinition(signature, out.node.content.resourcePrototypeDefinition);
             ResourcePrototypeDefinition& proto = out.node.content.resourcePrototypeDefinition;
+            out.node.attributes.name = proto.name;
 
             if (pd.exportSourceMap()) {
 

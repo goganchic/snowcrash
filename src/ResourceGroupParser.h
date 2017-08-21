@@ -42,6 +42,7 @@ namespace snowcrash {
             // Resources only, parse as exclusive nested sections
             if (nestedType != UndefinedSectionType) {
                 layout = ExclusiveNestedSectionLayout;
+                pd.resourcePrototypesChain.push_back("");
                 return cur;
             }
 
@@ -49,7 +50,17 @@ namespace snowcrash {
 
             if (RegexCapture(node->text, GroupHeaderRegex, captureGroups, 5)) {
                 out.node.attributes.name = captureGroups[1];
-                pd.resourcePrototypesChain.push_back(captureGroups[3]);
+                Literal protoName = captureGroups[3];
+
+                if (!protoName.empty() && pd.resourcePrototypesTable.find(protoName) == pd.resourcePrototypesTable.end()) {
+                    std::stringstream ss;
+                    ss << "unknown resource prototype '" << protoName << "'";
+
+                    mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(node->sourceMap, pd.sourceCharacterIndex);
+                    throw Error(ss.str(), ResourcePrototypeError, sourceMap);
+                }
+
+                pd.resourcePrototypesChain.push_back(protoName);
                 TrimString(out.node.attributes.name);
             } else {
                 pd.resourcePrototypesChain.push_back("");

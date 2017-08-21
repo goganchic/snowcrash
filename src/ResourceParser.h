@@ -50,6 +50,7 @@ namespace snowcrash {
 
                 out.node.uriTemplate = captureGroups[3];
 
+                checkProtoName(captureGroups[6], node, pd);
                 pd.resourcePrototypesChain.push_back(captureGroups[6]);
 
                 // Make this section an action
@@ -60,11 +61,14 @@ namespace snowcrash {
                 out.node.name = captureGroups[1];
                 TrimString(out.node.name);
                 out.node.uriTemplate = captureGroups[3];
+
+                checkProtoName(captureGroups[6], node, pd);
                 pd.resourcePrototypesChain.push_back(captureGroups[6]);
 
                 return processNestedAction(node, node->parent().children(), pd, layout, out);
             } else {
                 captureGroups = matchNamedResourceHeader(node, out.node);
+                checkProtoName(captureGroups[5], node, pd);
                 pd.resourcePrototypesChain.push_back(captureGroups[5]);
             }
 
@@ -79,6 +83,16 @@ namespace snowcrash {
             }
 
             return ++MarkdownNodeIterator(node);
+        }
+
+        static void checkProtoName(Literal& protoName, const MarkdownNodeIterator& node, SectionParserData& pd) {
+            if (!protoName.empty() && pd.resourcePrototypesTable.find(protoName) == pd.resourcePrototypesTable.end()) {
+                std::stringstream ss;
+                ss << "unknown resource prototype '" << protoName << "'";
+
+                mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(node->sourceMap, pd.sourceCharacterIndex);
+                throw Error(ss.str(), ResourcePrototypeError, sourceMap);
+            }
         }
 
         static MarkdownNodeIterator processNestedSection(const MarkdownNodeIterator& node,

@@ -475,7 +475,7 @@ namespace snowcrash {
             
             IntermediateParseResult<ResourcePrototype> resourcePrototype(tmpReport);
             ResourcePrototypeParser::parse(node, siblings, pd, resourcePrototype);
-            ResourcePrototypeDefinition& typeDefinition = resourcePrototype.node.content.resourcePrototypeDefinition;
+            ResourcePrototypeDefinition& typeDefinition = resourcePrototype.node.content.resourcePrototype;
             
             if (pd.resourcePrototypesTable.find(typeDefinition.name) != pd.resourcePrototypesTable.end()) {
                 

@@ -425,8 +425,8 @@ namespace snowcrash {
             Elements& elements();
             const Elements& elements() const;
 
-            /** OR Resource prototype definition */
-            ResourcePrototypeDefinition resourcePrototypeDefinition;
+            /** OR Resource prototype */
+            ResourcePrototypeDefinition resourcePrototype;
 
             /** Constructor */
             Content();

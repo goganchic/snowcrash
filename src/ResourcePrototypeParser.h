@@ -35,15 +35,13 @@ namespace snowcrash {
                                                       const Signature& signature,
                                                       const ParseResultRef<ResourcePrototype>& out) {
 
-            parseResourcePrototypeDefinition(signature, out.node.content.resourcePrototypeDefinition);
-            ResourcePrototypeDefinition& proto = out.node.content.resourcePrototypeDefinition;
+            parseResourcePrototypeDefinition(signature, out.node.content.resourcePrototype);
+            ResourcePrototypeDefinition& proto = out.node.content.resourcePrototype;
             out.node.attributes.name = proto.name;
 
             if (pd.exportSourceMap()) {
-
-                if (!proto.name.empty()) {
-                    out.sourceMap.name.sourceMap = node->sourceMap;
-                }
+                out.sourceMap.name.sourceMap = node->sourceMap;
+                out.sourceMap.baseName.sourceMap = node->sourceMap;
             }
 
             return ++MarkdownNodeIterator(node);
@@ -64,7 +62,7 @@ namespace snowcrash {
 
                     cur = PayloadParser::parse(node, siblings, pd, payload);
 
-                    out.node.content.resourcePrototypeDefinition.responses.push_back(payload.node);
+                    out.node.content.resourcePrototype.responses.push_back(payload.node);
 
                     if (pd.exportSourceMap()) {
                         out.sourceMap.responses.collection.push_back(payload.sourceMap);

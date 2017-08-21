@@ -242,7 +242,9 @@ namespace snowcrash {
      */
     template<>
     struct SourceMap<ResourcePrototype> : public SourceMapBase {
+
         SourceMap<Literal> name;
+        SourceMap<Literal> baseName;
         SourceMap<Responses> responses;
     };
 

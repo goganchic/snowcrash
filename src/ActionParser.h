@@ -89,7 +89,7 @@ namespace snowcrash {
                        pd.resourcePrototypesTable.find(protoName) != pd.resourcePrototypesTable.end() &&
                        usedPrototypes.find(protoName) == usedPrototypes.end()) {
                     usedPrototypes.insert(protoName);
-                    ResourcePrototypeDefinition proto = pd.resourcePrototypesTable[*protoIt].first;
+                    ResourcePrototypeDefinition proto = pd.resourcePrototypesTable[protoName].first;
 
                     for (auto j = proto.responses.begin(); j != proto.responses.end(); j++) {
 

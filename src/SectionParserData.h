@@ -56,8 +56,8 @@ namespace snowcrash {
 
         /** Variable to store the current named type */
         mson::Literal namedTypeContext;
-        
-        std::vector<Literal> resourcePrototypesChain;
+
+        std::vector<ResourcePrototypeNames> resourcePrototypesChain;
         
         ResourcePrototypesTable resourcePrototypesTable;
 

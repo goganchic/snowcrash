@@ -235,7 +235,7 @@ namespace snowcrash {
 
     /** Source Map of Collection of Elements */
     SOURCE_MAP_COLLECTION(Element, Elements)
-    
+
     
     /**
      * Source Map Structure for Resource Prototypes (Category Element)
@@ -244,7 +244,6 @@ namespace snowcrash {
     struct SourceMap<ResourcePrototype> : public SourceMapBase {
 
         SourceMap<Literal> name;
-        SourceMap<Literal> baseName;
         SourceMap<Responses> responses;
     };
 

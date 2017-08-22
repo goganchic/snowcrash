@@ -82,46 +82,54 @@ namespace snowcrash {
 
             std::set<Literal> usedPrototypes;
 
-            for (auto protoIt = pd.resourcePrototypesChain.begin(); protoIt != pd.resourcePrototypesChain.end(); ++protoIt) {
-                Literal protoName = *protoIt;
 
-                while (!protoName.empty() &&
-                       pd.resourcePrototypesTable.find(protoName) != pd.resourcePrototypesTable.end() &&
-                       usedPrototypes.find(protoName) == usedPrototypes.end()) {
-                    usedPrototypes.insert(protoName);
-                    ResourcePrototypeDefinition proto = pd.resourcePrototypesTable[protoName].first;
-
-                    for (auto j = proto.responses.begin(); j != proto.responses.end(); j++) {
-
-                        IntermediateParseResult<Payload> payload(out.report);
-
-                        if (out.node.examples.empty()) {
-                            TransactionExample transaction;
-                            SourceMap<TransactionExample> transactionSM;
-
-                            out.node.examples.push_back(transaction);
-
-                            if (pd.exportSourceMap()) {
-                                out.sourceMap.examples.collection.push_back(transactionSM);
-                            }
-                        }
-
-                        // TODO: find out if this string is required
-                        // checkPayload(sectionType, sourceMap, j->node, out);
-
-                        out.node.examples.back().responses.push_back(*j);
-
-                        if (pd.exportSourceMap()) {
-                            out.sourceMap.examples.collection.back().responses.collection.push_back(payload.sourceMap);
-                        }
-                    }
-
-
-                    protoName = proto.baseName;
+            for (auto protosIt = pd.resourcePrototypesChain.begin(); protosIt != pd.resourcePrototypesChain.end(); ++protosIt) {
+                for (auto protoIt = protosIt->begin(); protoIt != protosIt->end(); ++protoIt) {
+                    addProtoResponses(*protoIt, usedPrototypes, pd, out);
                 }
             }
 
             return ++MarkdownNodeIterator(node);
+        }
+
+        static void addProtoResponses(Literal& protoName, std::set<Literal>& usedPrototypes, SectionParserData& pd, const ParseResultRef<Action>& out) {
+
+            if (protoName.empty() || usedPrototypes.find(protoName) != usedPrototypes.end()) {
+                return;
+            }
+
+            usedPrototypes.insert(protoName);
+
+            ResourcePrototypeDefinition proto = pd.resourcePrototypesTable[protoName].first;
+
+            for (auto j = proto.responses.begin(); j != proto.responses.end(); ++j) {
+
+                IntermediateParseResult<Payload> payload(out.report);
+
+                if (out.node.examples.empty()) {
+                    TransactionExample transaction;
+                    SourceMap<TransactionExample> transactionSM;
+
+                    out.node.examples.push_back(transaction);
+
+                    if (pd.exportSourceMap()) {
+                        out.sourceMap.examples.collection.push_back(transactionSM);
+                    }
+                }
+
+                // TODO: find out if this string is required
+                // checkPayload(sectionType, sourceMap, j->node, out);
+
+                out.node.examples.back().responses.push_back(*j);
+
+                if (pd.exportSourceMap()) {
+                    out.sourceMap.examples.collection.back().responses.collection.push_back(payload.sourceMap);
+                }
+            }
+
+            for (auto j = proto.baseNames.begin(); j != proto.baseNames.end(); ++j) {
+                addProtoResponses(*j, usedPrototypes, pd, out);
+            }
         }
 
         static MarkdownNodeIterator processNestedSection(const MarkdownNodeIterator& node,

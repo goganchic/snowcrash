@@ -42,7 +42,7 @@ namespace snowcrash {
             // Resources only, parse as exclusive nested sections
             if (nestedType != UndefinedSectionType) {
                 layout = ExclusiveNestedSectionLayout;
-                pd.resourcePrototypesChain.push_back("");
+                pd.resourcePrototypesChain.push_back(ResourcePrototypeNames());
                 return cur;
             }
 
@@ -50,20 +50,46 @@ namespace snowcrash {
 
             if (RegexCapture(node->text, GroupHeaderRegex, captureGroups, 5)) {
                 out.node.attributes.name = captureGroups[1];
-                Literal protoName = captureGroups[3];
+                Literal protoNameString = captureGroups[3];
+                ResourcePrototypeNames protoNames;
 
-                if (!protoName.empty() && pd.resourcePrototypesTable.find(protoName) == pd.resourcePrototypesTable.end()) {
-                    std::stringstream ss;
-                    ss << "unknown resource prototype '" << protoName << "'";
+                if (!protoNameString.empty()) {
+                    Literal protoName;
+                    size_t pos = 0;
 
-                    mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(node->sourceMap, pd.sourceCharacterIndex);
-                    throw Error(ss.str(), ResourcePrototypeError, sourceMap);
+                    while (!protoNameString.empty()) {
+                        pos = protoNameString.find(",");
+
+                        if (pos == std::string::npos) {
+                            pos = protoNameString.size();
+                        }
+
+                        protoName = protoNameString.substr(0, pos);
+
+                        TrimString(protoName);
+
+                        if (!protoName.empty() && pd.resourcePrototypesTable.find(protoName) == pd.resourcePrototypesTable.end()) {
+                            std::stringstream ss;
+                            ss << "unknown resource prototype '" << protoName << "'";
+
+                            mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(node->sourceMap, pd.sourceCharacterIndex);
+                            throw Error(ss.str(), ResourcePrototypeError, sourceMap);
+                        }
+
+                        protoNames.push_back(protoName);
+
+                        if (pos < protoNameString.size()) {
+                            pos++;
+                        }
+
+                        protoNameString.erase(0, pos);
+                    }
                 }
+                pd.resourcePrototypesChain.push_back(protoNames);
 
-                pd.resourcePrototypesChain.push_back(protoName);
                 TrimString(out.node.attributes.name);
             } else {
-                pd.resourcePrototypesChain.push_back("");
+                pd.resourcePrototypesChain.push_back(ResourcePrototypeNames());
             }
 
             if (pd.exportSourceMap() && !out.node.attributes.name.empty()) {

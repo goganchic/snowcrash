@@ -41,7 +41,6 @@ namespace snowcrash {
 
             if (pd.exportSourceMap()) {
                 out.sourceMap.name.sourceMap = node->sourceMap;
-                out.sourceMap.baseName.sourceMap = node->sourceMap;
             }
 
             return ++MarkdownNodeIterator(node);
@@ -112,8 +111,8 @@ namespace snowcrash {
 
         static void parseResourcePrototypeDefinition(const Signature& signature, ResourcePrototypeDefinition& typeDefinition) {
             typeDefinition.name = signature.identifier;
-            if (signature.attributes.size() > 0) {
-                typeDefinition.baseName = signature.attributes[0];
+            for (auto i = signature.attributes.begin(); i != signature.attributes.end(); i++) {
+                typeDefinition.baseNames.push_back(*i);
             }
         }
     };

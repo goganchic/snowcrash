@@ -376,14 +376,16 @@ namespace snowcrash {
 
     /** Collection of elements */
     typedef std::vector<Element> Elements;
+
+    typedef std::vector<Literal> ResourcePrototypeNames;
     
     struct ResourcePrototypeDefinition {
         
         ResourcePrototypeDefinition()
-        : name(""), baseName("") {}
+        : name("") {}
         
         Literal name;
-        Literal baseName;
+        ResourcePrototypeNames baseNames;
         Responses responses;
         
     };

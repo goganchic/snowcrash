@@ -259,38 +259,52 @@ namespace snowcrash {
         static void resolveResourceProrotypesTable(SectionParserData& pd,
                                                    Report& report) {
             ResourcePrototypesTable::iterator it;
-            Literal proto;
+            std::set<Literal> activePrototypes;
             
-            // First resolve dependency tables
+
             for (it = pd.resourcePrototypesTable.begin();
                  it != pd.resourcePrototypesTable.end();
                  it++) {
-                
-                std::set<Literal> chain;
-                chain.insert(it->first);
-                proto = it->second.first.baseName;
-                while (!proto.empty()) {
-                    if (pd.resourcePrototypesTable.find(proto) == pd.resourcePrototypesTable.end()) {
-                        std::stringstream ss;
-                        ss << "resource prototype '" << proto << "' is not defined in the document";
-                        
-                        mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(it->second.second, pd.sourceCharacterIndex);
-                        report.error = Error(ss.str(), MSONError, sourceMap);
-                        return;
-                    }
-                    
-                    if (chain.find(proto) != chain.end()) {
-                        std::stringstream ss;
-                        ss << "resource prorotype '" << it->first << "' circularly referencing itself";
-                        
-                        mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(it->second.second, pd.sourceCharacterIndex);
-                        report.error = Error(ss.str(), MSONError, sourceMap);
-                        return;
-                    }
-                    chain.insert(proto);
-                    proto = pd.resourcePrototypesTable[proto].first.baseName;
+                bool res = resolvePrototype(it->first, pd, report, activePrototypes);
+                if (!res) {
+                    return;
                 }
             }
+        }
+
+        static bool resolvePrototype(const Literal& protoName, SectionParserData& pd, Report& report, std::set<Literal> activeProtos) {
+            if (activeProtos.find(protoName) != activeProtos.end()) {
+                std::stringstream ss;
+                ss << "resource prorotype '" << protoName << "' circularly referencing itself";
+
+                mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(pd.resourcePrototypesTable[protoName].second, pd.sourceCharacterIndex);
+                report.error = Error(ss.str(), MSONError, sourceMap);
+                return false;
+            }
+
+            activeProtos.insert(protoName);
+
+            ResourcePrototypeDefinition& proto = pd.resourcePrototypesTable[protoName].first;
+
+            for (auto baseNameIt = proto.baseNames.begin(); baseNameIt != proto.baseNames.end(); ++baseNameIt) {
+                if (pd.resourcePrototypesTable.find(*baseNameIt) == pd.resourcePrototypesTable.end()) {
+                    std::stringstream ss;
+                    ss << "resource prototype '" << *baseNameIt << "' is not defined in the document";
+
+                    mdp::CharactersRangeSet sourceMap = mdp::BytesRangeSetToCharactersRangeSet(pd.resourcePrototypesTable[protoName].second, pd.sourceCharacterIndex);
+                    report.error = Error(ss.str(), MSONError, sourceMap);
+                    return false;
+                }
+
+                bool res = resolvePrototype(*baseNameIt, pd, report, activeProtos);
+
+                if (!res) {
+                    return false;
+                }
+            }
+
+            activeProtos.erase(proto.name);
+            return true;
         }
 
         static void checkForPossibleSectionMistakes(const MarkdownNodeIterator& node, SectionParserData& pd, Report& report) {
@@ -486,8 +500,6 @@ namespace snowcrash {
                 report.error = Error(ss.str(), ResourcePrototypeError, sourceMap);
                 return;
             }
-            
-            Literal baseTypeName = typeDefinition.baseName;
             
             pd.resourcePrototypesTable[typeDefinition.name] = std::make_pair(typeDefinition, node->sourceMap);
             
